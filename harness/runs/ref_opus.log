@@ -1,0 +1,70 @@
+Building reference targets (LSP + AST oracle) against repo HEAD...
+  to_key_val_list    truth= 9 across 3 files (pyright=10 ast=7 ast_agree=5)
+  cookiejar_from_dict truth=11 across 4 files (pyright=12 ast=10 ast_agree=6)
+  get_auth_from_url  truth= 7 across 3 files (pyright=8 ast=5 ast_agree=4)
+  _basic_auth_str    truth= 6 across 3 files (pyright=7 ast=6 ast_agree=4)
+  merge_setting      truth= 8 across 1 files (pyright=9 ast=8 ast_agree=8)
+
+5 targets built.
+to_key_val_list    A_grep    r0 f1=0.625 exact=False tok=  1063 calls= 6
+to_key_val_list    A_grep    r1 f1=0.625 exact=False tok=  1121 calls= 6
+to_key_val_list    A_grep    r2 f1=0.625 exact=False tok=  1085 calls= 6
+to_key_val_list    B_lsp     r0 f1=0.714 exact=False tok=  1340 calls= 7
+to_key_val_list    B_lsp     r1 f1=0.714 exact=False tok=  1297 calls= 7
+to_key_val_list    B_lsp     r2 f1=0.714 exact=False tok=  1031 calls= 6
+to_key_val_list    C_both    r0 f1=0.625 exact=False tok=  1019 calls= 6
+to_key_val_list    C_both    r1 f1=0.625 exact=False tok=  1254 calls= 8
+to_key_val_list    C_both    r2 f1=0.625 exact=False tok=  1374 calls= 9
+to_key_val_list    D_forced  r0 f1=0.625 exact=False tok=  1634 calls=12
+to_key_val_list    D_forced  r1 f1=0.625 exact=False tok=  1291 calls= 9
+to_key_val_list    D_forced  r2 f1=0.625 exact=False tok=  1548 calls= 9
+cookiejar_from_dict A_grep    r0 f1=0.571 exact=False tok=  1347 calls= 7
+cookiejar_from_dict A_grep    r1 f1=0.571 exact=False tok=  1442 calls= 7
+cookiejar_from_dict A_grep    r2 f1=0.571 exact=False tok=  1483 calls= 7
+cookiejar_from_dict B_lsp     r0 f1=0.533 exact=False tok=  1369 calls= 9
+cookiejar_from_dict B_lsp     r1 f1=0.706 exact=False tok=  2309 calls=13
+cookiejar_from_dict B_lsp     r2 f1=0.706 exact=False tok=  2190 calls=15
+cookiejar_from_dict C_both    r0 f1=0.571 exact=False tok=  1718 calls=10
+cookiejar_from_dict C_both    r1 f1=0.571 exact=False tok=  1890 calls=12
+cookiejar_from_dict C_both    r2 f1=0.571 exact=False tok=  1502 calls= 9
+cookiejar_from_dict D_forced  r0 f1=0.571 exact=False tok=  1676 calls=12
+cookiejar_from_dict D_forced  r1 f1=0.571 exact=False tok=  1980 calls=12
+cookiejar_from_dict D_forced  r2 f1=0.571 exact=False tok=  1318 calls= 7
+get_auth_from_url  A_grep    r0 f1=0.667 exact=False tok=  1045 calls= 8
+get_auth_from_url  A_grep    r1 f1=0.667 exact=False tok=  1073 calls= 7
+get_auth_from_url  A_grep    r2 f1=0.667 exact=False tok=  1086 calls= 7
+get_auth_from_url  B_lsp     r0 f1=0.727 exact=False tok=  1317 calls=10
+get_auth_from_url  B_lsp     r1 f1=0.727 exact=False tok=  1336 calls=10
+get_auth_from_url  B_lsp     r2 f1=0.727 exact=False tok=  1262 calls=10
+get_auth_from_url  C_both    r0 f1=0.667 exact=False tok=  1237 calls= 9
+get_auth_from_url  C_both    r1 f1=0.667 exact=False tok=  1259 calls= 9
+get_auth_from_url  C_both    r2 f1=0.667 exact=False tok=  1521 calls=12
+get_auth_from_url  D_forced  r0 f1=0.667 exact=False tok=  1347 calls=10
+get_auth_from_url  D_forced  r1 f1=0.667 exact=False tok=  1285 calls=10
+get_auth_from_url  D_forced  r2 f1=0.727 exact=False tok=  1305 calls=11
+_basic_auth_str    A_grep    r0 f1=0.667 exact=False tok=   992 calls= 7
+_basic_auth_str    A_grep    r1 f1=0.667 exact=False tok=  1071 calls= 7
+_basic_auth_str    A_grep    r2 f1=0.667 exact=False tok=  1029 calls= 7
+_basic_auth_str    B_lsp     r0 f1=0.8 exact=False tok=  1181 calls= 8
+_basic_auth_str    B_lsp     r1 f1=0.8 exact=False tok=  1060 calls= 8
+_basic_auth_str    B_lsp     r2 f1=0.8 exact=False tok=  1142 calls= 8
+_basic_auth_str    C_both    r0 f1=0.667 exact=False tok=  1344 calls= 9
+_basic_auth_str    C_both    r1 f1=0.667 exact=False tok=  1527 calls= 8
+_basic_auth_str    C_both    r2 f1=0.667 exact=False tok=  1455 calls=10
+_basic_auth_str    D_forced  r0 f1=0.667 exact=False tok=  1993 calls=12
+_basic_auth_str    D_forced  r1 f1=0.667 exact=False tok=  1914 calls=13
+_basic_auth_str    D_forced  r2 f1=0.667 exact=False tok=  1877 calls=13
+merge_setting      A_grep    r0 f1=1.0 exact=True tok=   924 calls= 5
+merge_setting      A_grep    r1 f1=1.0 exact=True tok=  1199 calls=11
+merge_setting      A_grep    r2 f1=1.0 exact=True tok=  1086 calls= 9
+merge_setting      B_lsp     r0 f1=1.0 exact=True tok=  1220 calls= 6
+merge_setting      B_lsp     r1 f1=1.0 exact=True tok=  1095 calls= 6
+merge_setting      B_lsp     r2 f1=1.0 exact=True tok=  1055 calls= 6
+merge_setting      C_both    r0 f1=1.0 exact=True tok=   897 calls= 7
+merge_setting      C_both    r1 f1=1.0 exact=True tok=  1144 calls= 9
+merge_setting      C_both    r2 f1=1.0 exact=True tok=  1162 calls= 7
+merge_setting      D_forced  r0 f1=1.0 exact=True tok=  1176 calls= 8
+merge_setting      D_forced  r1 f1=1.0 exact=True tok=   987 calls= 7
+merge_setting      D_forced  r2 f1=1.0 exact=True tok=  1153 calls= 8
+
+wrote 60 results to /Users/pc/.slock/agents/84c79992-928b-4b41-88ec-42bfee0edd9b/lsp-harness/runs/ref_opus.jsonl

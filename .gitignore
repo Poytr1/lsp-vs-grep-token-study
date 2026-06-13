@@ -1,0 +1,14 @@
+# Build artifacts / large third-party trees (not committed)
+node_modules/
+repos/
+_lsp_scratch/
+__pycache__/
+*.pyc
+
+# LaTeX build intermediates
+*.aux
+*.log.tex
+*.out
+*.toc
+*.synctex.gz
+!harness/runs/*.log
