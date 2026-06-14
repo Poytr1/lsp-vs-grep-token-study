@@ -12,11 +12,13 @@ actually save tokens?**
 | **Localization** (issue names the symbol) | LSP **costs** tokens, not saves: +6% (Opus 4.8), +118% (Sonnet 4.6) at equal success. |
 | **Reference-completeness** (find all callers) | LSP buys **precision** (1.00 vs 0.76, zero false sites) but **not** token savings (+19% premium), and can't lift the ~0.66 recall ceiling. |
 | **Model capability** | LSP **saves** tokens only for the weakest model (Haiku 4.5, −26%) — a crutch against grep noise. |
+| **What drives the LSP's value** | **Lexical noise, not language.** Across two TypeScript repos the verdict flips with codebase noise: ΔF1 **+0.000** on clean `remeda` vs **+0.246** on noisy `hono` — and noisy `hono` is the *one* setting where the LSP is both more accurate **and** cheaper (−12%) for a strong model. Pooled across both languages, LSP benefit tracks `grep` precision on a single line (slope ≈ −0.49). |
 | **Revealed preference** | Tool choice is **task-dependent**: on localization every model defaults to `grep` (semantic-tool use 0% / 4% / 6%), but on reference-finding the same models reach for the LSP ~half the time, unprompted (45% / 50% / 57%). The grep preference is a learned, task-shaped policy — not a fixed bias. |
 
 The engineering takeaway is not "add an LSP" but **(a)** an adaptive router keyed on task class, model
-capability, and lexical noise, and **(b)** training the *when-to-go-semantic* competence into the
-policy — because handing the model the tool is demonstrably insufficient.
+capability, and **lexical-noise level (estimable from a probe `grep`, not a language whitelist)**, and
+**(b)** training the *when-to-go-semantic* competence into the policy — because handing the model the
+tool is demonstrably insufficient.
 
 ## The experiment
 
@@ -92,8 +94,17 @@ python harness/harness.py --arms A_grep,B_lsp,C_both,D_forced --limit 6 --rollou
 python harness/ref_task.py --arms A_grep,B_lsp,C_both,D_forced --rollouts 3 \
     --model claude-opus-4-8 --out ref_opus.jsonl
 
+# cross-language reference: TypeScript repos (typescript-language-server oracle)
+#   clean repo (remeda) and noisy repo (hono) bracket lexical noise
+git clone https://github.com/remeda/remeda harness/repos/remeda
+git clone https://github.com/honojs/hono   harness/repos/hono
+python harness/ref_task_ts.py --repo remeda --arms A_grep,B_lsp,C_both,D_forced \
+    --rollouts 3 --model claude-opus-4-8 --out ref_ts_opus.jsonl
+python harness/ref_task_ts.py --repo hono --arms A_grep,B_lsp,C_both,D_forced \
+    --rollouts 3 --model claude-opus-4-8 --out ref_ts_hono_opus.jsonl
+
 python harness/analyze4.py harness/runs/v1_all_arms.jsonl   # analysis tables
-python harness/make_figs.py                                 # regenerate figures
+python harness/make_figs.py                                 # regenerate figures (incl. fig6 cross-language)
 ```
 
 > Note: `harness/repos/` (the cloned `requests`) and `node_modules/` are intentionally gitignored.
@@ -102,9 +113,11 @@ python harness/make_figs.py                                 # regenerate figures
 
 ## Caveats
 
-This is a **pilot**: one repository (`requests`, which the models have likely seen), small N, two task
-classes (not the full edit/refactor space), Python with `pylsp`/`pyright` (the originally-motivating
-**TypeScript** stratum is untested), one harness. The *directions* are robust; *effect sizes* are
+This is a **pilot**: a few small, well-known repositories (`requests` for localization; `requests` +
+`remeda` + `hono` for reference-completeness), small N, two task classes (not the full edit/refactor
+space), one harness. Localization is still Python-only; the **TypeScript** stratum is now covered on the
+reference task — and, notably, did *not* behave as a privileged "strong-LSP" language (a *clean*
+TypeScript repo was the worst case for the LSP). The *directions* are robust; *effect sizes* are
 pilot-scale. See the paper's Limitations section.
 
 ## The paper

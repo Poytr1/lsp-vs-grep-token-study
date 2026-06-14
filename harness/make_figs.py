@@ -145,6 +145,48 @@ for bars in (b1, b2):
         ax.text(b.get_x()+b.get_width()/2, b.get_height()+1, f"{b.get_height():.0f}%", ha="center", fontsize=8.5)
 fig.tight_layout(); fig.savefig(os.path.join(FIGS, "fig5_routing.pdf")); plt.close(fig)
 
+# ---------- Figure 6: grep precision vs LSP F1 benefit, per target across 3 repos ----------
+# The causal centerpiece: LSP's benefit tracks grep's precision (lexical noise), not language.
+def per_target(path):
+    rows = load(path)
+    bt = defaultdict(lambda: defaultdict(list))
+    for r in rows:
+        bt[r["target"]][r["arm"]].append(r)
+    out = []
+    for t in bt:
+        a = bt[t]["A_grep"]; b = bt[t]["B_lsp"]
+        if not a or not b: continue
+        gp = mean(x["precision"] for x in a)
+        dF1 = mean(x["f1"] for x in b) - mean(x["f1"] for x in a)
+        out.append((gp, dF1))
+    return out
+series = [
+    ("requests (Python, noisy)", "ref_opus.jsonl", "#DD8452", "o"),
+    ("remeda (TypeScript, clean)", "ref_ts_opus.jsonl", "#55A868", "s"),
+    ("hono (TypeScript, noisy)", "ref_ts_hono_opus.jsonl", "#C44E52", "^"),
+]
+fig, ax = plt.subplots(figsize=(6.2, 4.0))
+allpts = []
+for label, path, col, mk in series:
+    pts = per_target(path)
+    allpts += pts
+    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+    ax.scatter(xs, ys, c=col, marker=mk, s=70, label=label, edgecolors="black", linewidths=0.5, zorder=3)
+# trend line
+import numpy as np
+xs = np.array([p[0] for p in allpts]); ys = np.array([p[1] for p in allpts])
+m, c = np.polyfit(xs, ys, 1)
+xr = np.linspace(min(xs), 1.0, 50)
+ax.plot(xr, m*xr + c, "--", color="gray", lw=1.5, zorder=2,
+        label=f"trend (slope {m:.2f})")
+ax.axhline(0, color="black", lw=0.6, zorder=1)
+ax.set_xlabel("grep precision on the target (1.0 = no lexical false positives)")
+ax.set_ylabel("LSP benefit: F1(LSP) − F1(grep)")
+ax.set_title("The LSP helps exactly when grep is noisy —\nacross repos AND languages, one relationship")
+ax.legend(fontsize=8, loc="upper right")
+ax.grid(True, alpha=0.3)
+fig.tight_layout(); fig.savefig(os.path.join(FIGS, "fig6_noise.pdf")); plt.close(fig)
+
 print("Wrote figures:")
 for f in sorted(os.listdir(FIGS)):
     print("  figs/"+f)

@@ -1,0 +1,84 @@
+TS repo: /Users/pc/.slock/agents/84c79992-928b-4b41-88ec-42bfee0edd9b/lsp-harness/repos/hono
+Building TS reference targets (tsserver oracle)...
+  html               truth= 6 across 3 files (pyright=7 ast=0 ast_agree=0)
+  stream             truth= 9 across 4 files (pyright=10 ast=0 ast_agree=0)
+  decodeBase64       truth= 9 across 5 files (pyright=10 ast=0 ast_agree=0)
+  getRuntimeKey      truth=11 across 6 files (pyright=12 ast=0 ast_agree=0)
+  escapeToBuffer     truth=14 across 4 files (pyright=15 ast=0 ast_agree=0)
+  parseAccept        truth= 6 across 3 files (pyright=7 ast=0 ast_agree=0)
+
+6 targets built.
+html               A_grep    r0 f1=0.235 exact=False tok=  2851 calls=22
+html               A_grep    r1 f1=0.235 exact=False tok=  3353 calls=23
+html               A_grep    r2 f1=0.235 exact=False tok=  4141 calls=26
+html               B_lsp     r0 f1=0.5 exact=False tok=  2429 calls=12
+html               B_lsp     r1 f1=0.5 exact=False tok=  2809 calls=15
+html               B_lsp     r2 f1=0.5 exact=False tok=  3700 calls=17
+html               C_both    r0 f1=0.235 exact=False tok=  2982 calls=22
+html               C_both    r1 f1=0.148 exact=False tok=  4944 calls=26
+html               C_both    r2 f1=0.148 exact=False tok=  6653 calls=38
+html               D_forced  r0 f1=0.148 exact=False tok=  5529 calls=25
+html               D_forced  r1 f1=0.235 exact=False tok=  2673 calls=16
+html               D_forced  r2 f1=0.235 exact=False tok=  3777 calls=26
+stream             A_grep    r0 f1=0.286 exact=False tok=  2875 calls=22
+stream             A_grep    r1 f1=0.286 exact=False tok=  2822 calls=18
+stream             A_grep    r2 f1=0.286 exact=False tok=  1975 calls=16
+stream             B_lsp     r0 f1=0.714 exact=False tok=  2529 calls=15
+stream             B_lsp     r1 f1=0.714 exact=False tok=  2343 calls=15
+stream             B_lsp     r2 f1=0.714 exact=False tok=  2460 calls=14
+stream             C_both    r0 f1=0.435 exact=False tok=  4528 calls=28
+stream             C_both    r1 f1=0.435 exact=False tok=  3873 calls=23
+stream             C_both    r2 f1=0.435 exact=False tok=  3660 calls=22
+stream             D_forced  r0 f1=0.435 exact=False tok=  4204 calls=20
+stream             D_forced  r1 f1=0.435 exact=False tok=  3100 calls=16
+stream             D_forced  r2 f1=0.435 exact=False tok=  4194 calls=21
+decodeBase64       A_grep    r0 f1=0.714 exact=False tok=  1341 calls= 7
+decodeBase64       A_grep    r1 f1=0.714 exact=False tok=  1721 calls= 9
+decodeBase64       A_grep    r2 f1=0.714 exact=False tok=  1427 calls= 7
+decodeBase64       B_lsp     r0 f1=0.714 exact=False tok=  1635 calls=12
+decodeBase64       B_lsp     r1 f1=0.714 exact=False tok=  1729 calls=12
+decodeBase64       B_lsp     r2 f1=0.714 exact=False tok=  1576 calls=11
+decodeBase64       C_both    r0 f1=0.714 exact=False tok=  1521 calls= 9
+decodeBase64       C_both    r1 f1=0.714 exact=False tok=  1337 calls= 8
+decodeBase64       C_both    r2 f1=0.714 exact=False tok=  1398 calls= 9
+decodeBase64       D_forced  r0 f1=0.714 exact=False tok=  1589 calls=10
+decodeBase64       D_forced  r1 f1=0.714 exact=False tok=  1877 calls=14
+decodeBase64       D_forced  r2 f1=0.714 exact=False tok=  1628 calls= 9
+getRuntimeKey      A_grep    r0 f1=0.556 exact=False tok=  1752 calls=10
+getRuntimeKey      A_grep    r1 f1=0.556 exact=False tok=  1688 calls= 9
+getRuntimeKey      A_grep    r2 f1=0.556 exact=False tok=  1844 calls=11
+getRuntimeKey      B_lsp     r0 f1=0.706 exact=False tok=  2034 calls=14
+getRuntimeKey      B_lsp     r1 f1=0.706 exact=False tok=  1760 calls=10
+getRuntimeKey      B_lsp     r2 f1=0.706 exact=False tok=  1678 calls=10
+getRuntimeKey      C_both    r0 f1=0.632 exact=False tok=  2085 calls=12
+getRuntimeKey      C_both    r1 f1=0.632 exact=False tok=  3086 calls=16
+getRuntimeKey      C_both    r2 f1=0.556 exact=False tok=  1402 calls= 7
+getRuntimeKey      D_forced  r0 f1=0.632 exact=False tok=  2567 calls=14
+getRuntimeKey      D_forced  r1 f1=0.632 exact=False tok=  2052 calls=12
+getRuntimeKey      D_forced  r2 f1=0.632 exact=False tok=  2101 calls=13
+escapeToBuffer     A_grep    r0 f1=0.815 exact=False tok=  2007 calls=10
+escapeToBuffer     A_grep    r1 f1=0.815 exact=False tok=  1914 calls=10
+escapeToBuffer     A_grep    r2 f1=0.769 exact=False tok=  1598 calls= 7
+escapeToBuffer     B_lsp     r0 f1=0.88 exact=False tok=  1878 calls= 8
+escapeToBuffer     B_lsp     r1 f1=0.88 exact=False tok=  1465 calls= 8
+escapeToBuffer     B_lsp     r2 f1=0.88 exact=False tok=  1542 calls=10
+escapeToBuffer     C_both    r0 f1=0.815 exact=False tok=  1869 calls=10
+escapeToBuffer     C_both    r1 f1=0.815 exact=False tok=  1946 calls=11
+escapeToBuffer     C_both    r2 f1=0.815 exact=False tok=  1827 calls=10
+escapeToBuffer     D_forced  r0 f1=0.815 exact=False tok=  1968 calls=10
+escapeToBuffer     D_forced  r1 f1=0.815 exact=False tok=  1764 calls=12
+escapeToBuffer     D_forced  r2 f1=0.815 exact=False tok=  1821 calls=11
+parseAccept        A_grep    r0 f1=0.146 exact=False tok=  2269 calls=14
+parseAccept        A_grep    r1 f1=0.103 exact=False tok=  1621 calls= 8
+parseAccept        A_grep    r2 f1=0.103 exact=False tok=  2180 calls= 8
+parseAccept        B_lsp     r0 f1=0.667 exact=False tok=  1119 calls= 8
+parseAccept        B_lsp     r1 f1=0.667 exact=False tok=  1078 calls= 8
+parseAccept        B_lsp     r2 f1=0.667 exact=False tok=  1056 calls= 8
+parseAccept        C_both    r0 f1=0.146 exact=False tok=  2372 calls=12
+parseAccept        C_both    r1 f1=0.15 exact=False tok=  3268 calls=13
+parseAccept        C_both    r2 f1=0.15 exact=False tok=  2120 calls=10
+parseAccept        D_forced  r0 f1=0.146 exact=False tok=  3617 calls=16
+parseAccept        D_forced  r1 f1=0.15 exact=False tok=  1943 calls=10
+parseAccept        D_forced  r2 f1=0.15 exact=False tok=  2296 calls=12
+
+wrote 72 results to /Users/pc/.slock/agents/84c79992-928b-4b41-88ec-42bfee0edd9b/lsp-harness/runs/ref_ts_hono_opus.jsonl

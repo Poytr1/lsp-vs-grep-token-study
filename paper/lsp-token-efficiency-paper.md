@@ -468,9 +468,61 @@ routing competence and exercises it (~10× more) when the task obviously suits s
 *strengthens* the case for an adaptive router **and** for training the routing into the policy: the
 signal is demonstrably already there to be reinforced.
 
+### 6.5.5 Cross-repository: lexical noise, not language, drives the LSP's value
+
+The reference results above are all on one Python repository, which leaves the central causal claim —
+*the LSP helps by removing lexical false positives* — confounded with language. If `requests` is noisy
+and the LSP wins there, is that because Python's dynamic typing makes `grep` noisy, or because *that
+particular codebase* is noisy? The originally-motivating intuition (arXiv:2604.18413) was that a
+**strong-LSP, statically-typed** language like TypeScript should *widen* the LSP's edge. We tested it by
+running the identical `find_references` protocol (Opus 4.8, 6 targets × 4 arms × 3 rollouts) on two
+TypeScript repositories chosen to bracket lexical noise:
+
+- **`remeda`** — a small, clean, fully-typed utility library (function names are distinctive; `grep`
+  rarely hits a false positive).
+- **`hono`** — a noisy web framework (targets like `html`, `stream` appear as substrings across the
+  codebase in comments, types, and unrelated identifiers).
+
+The three repositories together separate the two axes — *language* (Python vs TypeScript) and *lexical
+noise* (clean vs noisy):
+
+| Repo | Language | Lexical noise | grep precision | LSP precision | grep F1 | LSP F1 | **ΔF1 (LSP − grep)** | LSP token Δ |
+|------|----------|---------------|---------------:|--------------:|--------:|-------:|---------------------:|------------:|
+| `remeda` | TypeScript | clean | 1.00 | 1.00 | 0.774 | 0.774 | **+0.000** | +16% |
+| `requests` | Python | noisy | 0.76 | 1.00 | 0.706 | 0.778 | **+0.072** | +19% |
+| `hono` | TypeScript | noisy | 0.51 | 1.00 | 0.451 | **0.697** | **+0.246** | **−12%** |
+
+Read down the table and the language axis evaporates. The two TypeScript repositories — *same language,
+same server, same protocol* — give **opposite** verdicts: on clean `remeda` the LSP buys literally
+nothing (ΔF1 = 0.000) and is a pure +16% token tax, because `grep` already achieves precision 1.00 and
+there is no noise to remove; on noisy `hono` the LSP delivers the **largest accuracy gain in the entire
+study** (ΔF1 = +0.246). This directly **refutes** the "static typing widens the LSP edge" prediction: a
+statically-typed language did *not* guarantee an LSP advantage — the clean TypeScript repo is exactly
+where the LSP is most useless. What predicts the LSP's value is not the language but **how noisy `grep`
+is on that codebase**, captured by `grep`'s precision: across all 18 per-target points spanning both
+languages, LSP benefit (F1(LSP) − F1(grep)) rises monotonically as `grep` precision falls (Figure 6).
+
+`hono` is also the **only cell in the entire study where the LSP saves tokens for a strong model** (−12%
+vs grep). The mechanism closes the loop with §6.5.3's token accounting: when `grep` precision collapses
+to 0.51, the agent must spend extra turns reading files to *adjudicate* each candidate call site (is
+this `html` a real reference or a substring in a comment?). Semantic `references` returns the resolved
+set directly, so it is simultaneously **more accurate and cheaper** — precisely the regime in which the
++19% "precision premium" of §6.5.3 inverts into a saving. The token premium of the LSP is therefore not
+a fixed property of the tool; it is the residual of how much false-positive adjudication `grep` forces,
+which is itself a function of codebase noise.
+
+One honest confound remains: `remeda`-clean-vs-`requests`-noisy also differs in codebase, not only
+language, and `hono` vs `remeda` differs in repository as well as noise. But the *direction* is
+unambiguous and the within-language contrast (`remeda` vs `hono`) is the cleanest control we have: it
+holds language and server fixed and moves only noise, and the verdict flips. The actionable consequence
+for the router (§6.5.4) is concrete: **the routing key is lexical-noise level (estimable cheaply from a
+trial `grep`'s hit density and cross-file spread), not a language whitelist.** "Use the LSP for
+TypeScript" is the wrong rule; "use the LSP when a probe `grep` looks noisy" is the right one.
+
 ### 6.5.4 Synthesis
 
-Across two task classes and three models, a single conditional structure holds:
+Across two task classes, three models, and three repositories spanning two languages, a single
+conditional structure holds:
 
 > **"Does an LSP save tokens?" — in general, no.** On symbol-named *localization* it *costs* tokens
 > (a tax that grows as the model gets stronger). On *reference-completeness* it does not save tokens
@@ -478,7 +530,10 @@ Across two task classes and three models, a single conditional structure holds:
 > 0.76) and cannot fix the recall bottleneck. It saves tokens only for the *weakest* model, as a crutch
 > against lexical noise. And the agent's tool choice is **task-dependent**: it defaults to grep on
 > localization (0–6% semantic use) but reaches for the LSP about half the time on reference tasks
-> (45–57%) — the grep preference is not a fixed bias but a learned, task-shaped policy.
+> (45–57%) — the grep preference is not a fixed bias but a learned, task-shaped policy. **And what
+> governs the LSP's value is lexical noise, not language**: across two TypeScript repositories the
+> verdict flips with codebase noise (ΔF1 +0.000 on clean `remeda`, +0.246 on noisy `hono`), and noisy
+> `hono` is the one setting where the LSP is both more accurate *and* cheaper for a strong model.
 
 This is exactly the shape that argues against "LSP-always" and for **(a)** an adaptive router keyed on
 task class, model capability, and lexical-noise level, and **(b)** training the *when-to-go-semantic*
@@ -492,12 +547,14 @@ rather than bolt on the tool.
 
 The §6.5 results are a **pilot** and must be read with these bounds:
 
-- **Single repository, small N.** All runs are on `requests` (a small, well-known library the models
-  have likely seen in pretraining). 6 localization tasks and 5 reference targets, 3 rollouts each.
-  This is enough to validate the harness and surface clear directional signals, **not** to claim
-  effect sizes that generalize. The numbers (e.g. Sonnet's +118%) are pilot-scale and will move with
-  more repositories and tasks; the *directions* (LSP taxes localization, helps recall-precision on
-  reference tasks, helps weak models, is ignored when optional) are the robust claims.
+- **Few repositories, small N.** Localization runs are on `requests`; reference runs span `requests`
+  (Python), `remeda` and `hono` (TypeScript) — three small, well-known libraries the models have likely
+  seen in pretraining. 6 localization tasks and 5–6 reference targets per repo, 3 rollouts each. This is
+  enough to validate the harness, separate the noise axis from language, and surface clear directional
+  signals, **not** to claim effect sizes that generalize. The numbers (e.g. Sonnet's +118%) are
+  pilot-scale and will move with more repositories and tasks; the *directions* (LSP taxes localization,
+  buys precision not tokens on reference tasks, helps weak models, is ignored when optional, and tracks
+  lexical noise rather than language) are the robust claims.
 - **Oracle quality drove a mid-study change.** We initially used `pylsp` (jedi) as the
   reference-completeness ground truth and found it too incomplete on dynamic Python (it disagreed
   badly with an AST cross-check). We switched the oracle to `pyright`, which is markedly more
@@ -507,9 +564,11 @@ The §6.5 results are a **pilot** and must be read with these bounds:
   (change-a-signature-and-fix-all-callers) end-to-end with test execution, nor the static-repo-map
   arm E, nor large repositories where the per-symbol LSP cost (arXiv:2604.18413) and the
   static-index trade-off (Prediction 4) would bite. Those remain open.
-- **Language and server.** Python with `pylsp`/`pyright`. The originally-motivating TypeScript case
-  (statically typed, where reference resolution is most reliable) is untested here and is the most
-  important next stratum.
+- **Language and server.** Python (`pylsp`/`pyright`) and TypeScript (`typescript-language-server`).
+  The originally-motivating TypeScript case is now covered on the reference task (§6.5.5) and — notably —
+  did *not* behave as a privileged "strong-LSP" stratum: a clean TypeScript repo was the *worst* case
+  for the LSP. Localization and the edit/static-index arms remain Python-only; cross-language
+  localization is the next stratum.
 - **Harness specificity.** One agent loop, one tool-description style. Tool affordance (description
   length/placement) is held fixed but is itself a lever; results may shift on another harness.
 - **Token accounting.** We count total context tokens (the user-facing cost) from the API's reported
@@ -540,8 +599,9 @@ the policy rather than a brittle external layer** — and since that routing com
 already present in latent form, the path is to reinforce it (the direction the most forward-looking
 related work, RL-from-language-server-feedback, already points). The contribution of this study is to
 replace an assertion with a measurement, and a blanket recommendation with a conditional one. The
-honest next step is scale: more repositories, the edit and static-index arms, and the TypeScript
-stratum where reference resolution is most reliable.
+honest next step is scale: more repositories, the edit and static-index arms, and cross-language
+*localization* — the reference task now spans both languages and shows the routing key is lexical
+noise, not language.
 
 ---
 

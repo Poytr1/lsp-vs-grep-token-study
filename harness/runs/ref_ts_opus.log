@@ -1,0 +1,71 @@
+TS repo: /Users/pc/.slock/agents/84c79992-928b-4b41-88ec-42bfee0edd9b/lsp-harness/repos/remeda/packages/remeda
+Building TS reference targets (tsserver oracle)...
+  find               truth=18 across 5 files (pyright=19 ast=0 ast_agree=0)
+  differenceWith     truth=14 across 5 files (pyright=15 ast=0 ast_agree=0)
+  indexBy            truth=12 across 4 files (pyright=13 ast=0 ast_agree=0)
+  intersection       truth=18 across 3 files (pyright=19 ast=0 ast_agree=0)
+  forEachObj         truth=13 across 3 files (pyright=14 ast=0 ast_agree=0)
+
+5 targets built.
+find               A_grep    r0 f1=0.714 exact=False tok=  1662 calls=12
+find               A_grep    r1 f1=0.714 exact=False tok=  1726 calls=13
+find               A_grep    r2 f1=0.714 exact=False tok=  1594 calls=10
+find               B_lsp     r0 f1=0.714 exact=False tok=  1452 calls= 9
+find               B_lsp     r1 f1=0.714 exact=False tok=  1688 calls=11
+find               B_lsp     r2 f1=0.714 exact=False tok=  1696 calls= 9
+find               C_both    r0 f1=0.714 exact=False tok=  2123 calls=13
+find               C_both    r1 f1=0.714 exact=False tok=  2361 calls=16
+find               C_both    r2 f1=0.714 exact=False tok=  1620 calls=10
+find               D_forced  r0 f1=0.714 exact=False tok=  1653 calls=11
+find               D_forced  r1 f1=0.714 exact=False tok=  1776 calls=11
+find               D_forced  r2 f1=0 exact=False tok=     0 calls= 0
+differenceWith     A_grep    r0 f1=0.727 exact=False tok=  1357 calls= 7
+differenceWith     A_grep    r1 f1=0.727 exact=False tok=  1350 calls= 7
+differenceWith     A_grep    r2 f1=0.727 exact=False tok=  1300 calls= 7
+differenceWith     B_lsp     r0 f1=0.727 exact=False tok=  1593 calls= 8
+differenceWith     B_lsp     r1 f1=0.727 exact=False tok=  1550 calls= 8
+differenceWith     B_lsp     r2 f1=0.727 exact=False tok=  2176 calls=10
+differenceWith     C_both    r0 f1=0.727 exact=False tok=  1309 calls= 7
+differenceWith     C_both    r1 f1=0.727 exact=False tok=  1550 calls=10
+differenceWith     C_both    r2 f1=0.727 exact=False tok=  1428 calls= 8
+differenceWith     D_forced  r0 f1=0.727 exact=False tok=  1541 calls= 9
+differenceWith     D_forced  r1 f1=0.727 exact=False tok=  1516 calls= 9
+differenceWith     D_forced  r2 f1=0.727 exact=False tok=  1844 calls=11
+indexBy            A_grep    r0 f1=0.737 exact=False tok=  1219 calls= 6
+indexBy            A_grep    r1 f1=0.737 exact=False tok=  1628 calls=10
+indexBy            A_grep    r2 f1=0.737 exact=False tok=  1531 calls= 8
+indexBy            B_lsp     r0 f1=0.737 exact=False tok=  1389 calls= 7
+indexBy            B_lsp     r1 f1=0.737 exact=False tok=  1901 calls= 9
+indexBy            B_lsp     r2 f1=0.737 exact=False tok=  1220 calls= 7
+indexBy            C_both    r0 f1=0.737 exact=False tok=  1299 calls= 8
+indexBy            C_both    r1 f1=0.737 exact=False tok=  1249 calls= 8
+indexBy            C_both    r2 f1=0.737 exact=False tok=  1250 calls= 7
+indexBy            D_forced  r0 f1=0.737 exact=False tok=  1672 calls=10
+indexBy            D_forced  r1 f1=0.737 exact=False tok=  1940 calls=10
+indexBy            D_forced  r2 f1=0.737 exact=False tok=  2021 calls=11
+intersection       A_grep    r0 f1=0.875 exact=False tok=  1167 calls= 8
+intersection       A_grep    r1 f1=0.875 exact=False tok=  1399 calls=10
+intersection       A_grep    r2 f1=0.875 exact=False tok=  1316 calls= 9
+intersection       B_lsp     r0 f1=0.875 exact=False tok=  2089 calls= 9
+intersection       B_lsp     r1 f1=0.875 exact=False tok=  2073 calls=10
+intersection       B_lsp     r2 f1=0.875 exact=False tok=  1289 calls= 6
+intersection       C_both    r0 f1=0.875 exact=False tok=  1410 calls= 9
+intersection       C_both    r1 f1=0.875 exact=False tok=  1290 calls= 9
+intersection       C_both    r2 f1=0.875 exact=False tok=  1520 calls= 9
+intersection       D_forced  r0 f1=0.875 exact=False tok=  1512 calls=10
+intersection       D_forced  r1 f1=0.875 exact=False tok=  1432 calls= 8
+intersection       D_forced  r2 f1=0.875 exact=False tok=  2000 calls=10
+forEachObj         A_grep    r0 f1=0.818 exact=False tok=  1046 calls= 5
+forEachObj         A_grep    r1 f1=0.818 exact=False tok=  1081 calls= 5
+forEachObj         A_grep    r2 f1=0.818 exact=False tok=  1192 calls= 5
+forEachObj         B_lsp     r0 f1=0.818 exact=False tok=  1321 calls= 6
+forEachObj         B_lsp     r1 f1=0.818 exact=False tok=  1296 calls= 6
+forEachObj         B_lsp     r2 f1=0.818 exact=False tok=  1154 calls= 6
+forEachObj         C_both    r0 f1=0.818 exact=False tok=  1030 calls= 5
+forEachObj         C_both    r1 f1=0.818 exact=False tok=  1171 calls= 6
+forEachObj         C_both    r2 f1=0.818 exact=False tok=  1221 calls= 7
+forEachObj         D_forced  r0 f1=0.818 exact=False tok=  1288 calls= 7
+forEachObj         D_forced  r1 f1=0.818 exact=False tok=  1549 calls= 9
+forEachObj         D_forced  r2 f1=0.818 exact=False tok=  1224 calls= 7
+
+wrote 60 results to /Users/pc/.slock/agents/84c79992-928b-4b41-88ec-42bfee0edd9b/lsp-harness/runs/ref_ts_opus.jsonl
