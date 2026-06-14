@@ -43,11 +43,12 @@ $+118\%$ Sonnet) and the agent ignores it entirely when free; on \emph{reference
 buys \textbf{precision} ($1.00$ vs $0.76$, zero false call sites) but not token savings (a ${\sim}19\%$
 premium) and cannot raise the recall ceiling set by agent thoroughness; and it nets a token
 \textbf{saving only for the weakest model} (Haiku, $-26\%$), as a crutch against lexical noise. The
-most robust finding cuts across every condition: \textbf{agents default to \code{grep} when the LSP is
-merely available, forgoing it even where it helps.} This argues not for ``LSP-always'' but for an
-\emph{adaptive router} keyed on task class, model capability, and lexical noise --- and, ultimately,
-for training the when-to-go-semantic competence into the policy, since handing the model the tool is
-demonstrably insufficient.
+most robust finding is that the agent's tool choice is \textbf{task-dependent}: it defaults to
+\code{grep} on localization (semantic-tool use $0$--$6\%$) but reaches for the LSP about half the time on
+reference tasks ($45$--$57\%$), \emph{unprompted}. The grep preference is not a fixed bias but a learned,
+task-shaped policy. This argues not for ``LSP-always'' but for an \emph{adaptive router} keyed on task
+class, model capability, and lexical noise --- and, since that routing competence is demonstrably already
+present in latent form, for reinforcing it into the policy rather than bolting on the tool.
 \end{abstract}
 
 \section{The fundamental question}
@@ -312,6 +313,49 @@ compounds. An LSP tool that returned the referenced line inline would likely era
 keeping precision~$=1.00$ (an actionable H-interface fix).}
 \end{figure}
 
+\subsection{Reference-completeness across models, and task-dependent tool choice}
+
+We ran the reference experiment on all three models (60 episodes each). Two results stand out.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrcr@{}}
+\toprule
+Model & A grep F1 & B lsp F1 & $\Delta$F1 & B vs.\ A tokens \\
+\midrule
+Opus 4.8 & 0.706 & 0.778 & $+0.072$ & $+19\%$ \\
+Sonnet 4.6 & 0.706 & 0.789 & $+0.083$ & $+12\%$ \\
+Haiku 4.5 & 0.706 & 0.719 & $+0.013$ & $\mathbf{-7\%}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+First, the accuracy benefit is \textbf{model-independent}: the LSP lifts F1 for all three models, with
+precision $\to 1.00$ for the two capable models and $0.93$ for Haiku. Second, the \emph{token} picture
+is milder than localization: the premium shrinks sharply relative to the localization tax (Sonnet
+$+118\%$ on localization $\to +12\%$ here; Haiku $-26\% \to -7\%$) but stays slightly positive for the
+two strong models. Unlike localization, here the premium \emph{buys real F1}. A clean token saving
+appears only for the weakest model (Haiku, $-7\%$).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\textwidth]{figs/fig5_routing.pdf}
+\caption{\textbf{Tool choice is task-dependent --- the agent has latent routing competence.} Semantic-tool
+use in the free-choice arm C, by model, for the two task classes. On \emph{localization} every model
+defaults to \code{grep} (0--6\%); on \emph{reference-completeness} the same models reach for the LSP
+roughly half the time, \emph{unprompted} (45--57\%). The grep preference is not absolute --- it is
+task-shaped. The policy already partially recognizes when ``find all callers'' calls for
+\code{find\_references}.}
+\end{figure}
+
+This second result is the most important refinement in the study. Our localization data suggested a
+\emph{universal} grep preference (arm C used the LSP $0\%$/$4\%$/$6\%$ of the time). The
+reference-completeness data overturns the universality: the \emph{same} agents, given the \emph{same}
+free choice, use semantic tools $45\%$/$50\%$/$57\%$ of the time when the task is reference-shaped
+(Figure~5). So the grep default is \textbf{task-dependent, not a fixed bias} --- the policy already has
+substantial latent routing competence and exercises it when the task obviously suits semantic
+navigation. This strengthens, rather than weakens, the case for an adaptive router \emph{and} for
+training the routing into the policy: the signal is demonstrably already there to be reinforced.
+
 \subsection{Synthesis}
 
 Across two task classes and three models, a single conditional structure holds:
@@ -319,10 +363,12 @@ Across two task classes and three models, a single conditional structure holds:
 \begin{quote}
 \textbf{``Does an LSP save tokens?'' --- in general, no.} On symbol-named \emph{localization} it
 \emph{costs} tokens (a tax that grows with model strength). On \emph{reference-completeness} it does not
-save tokens either; it buys \emph{precision} at a $\sim$19\% premium and cannot fix the recall
-bottleneck. It saves tokens only for the \emph{weakest} model, as a crutch against lexical noise. And
-across every condition, \textbf{agents default to \code{grep} when free --- forgoing the LSP even where
-it helps.}
+save tokens either (a smaller $+12$--$19\%$ premium for capable models) but the premium now buys
+\emph{precision} ($1.00$ vs.\ $0.76$) and cannot fix the recall ceiling. It saves tokens only for the
+\emph{weakest} model, as a crutch against lexical noise. And the agent's tool choice is
+\textbf{task-dependent}: it defaults to \code{grep} on localization ($0$--$6\%$ semantic use) but reaches
+for the LSP about half the time on reference tasks ($45$--$57\%$) --- the grep preference is not a fixed
+bias but a learned, task-shaped policy.
 \end{quote}
 
 This argues against ``LSP-always'' and for \textbf{(a)} an adaptive router keyed on task class, model

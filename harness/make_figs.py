@@ -123,6 +123,28 @@ fig.suptitle("Why LSP costs +19% tokens on reference tasks: location-only result
              fontsize=9, y=1.02)
 fig.tight_layout(); fig.savefig(os.path.join(FIGS, "fig4_why.pdf"), bbox_inches="tight"); plt.close(fig)
 
+# ---------- Figure 5: task-dependent routing — arm-C semantic use, localization vs reference ----------
+LOC_FILES = {"Haiku 4.5": "sweep_haiku.jsonl", "Sonnet 4.6": "sweep_sonnet.jsonl", "Opus 4.8": "v1_all_arms.jsonl"}
+REF_FILES = {"Haiku 4.5": "ref_haiku.jsonl", "Sonnet 4.6": "ref_sonnet.jsonl", "Opus 4.8": "v1_all_arms.jsonl"}
+REF_FILES["Opus 4.8"] = "ref_opus.jsonl"
+order = ["Opus 4.8", "Sonnet 4.6", "Haiku 4.5"]
+loc_sem = [semfrac(load(LOC_FILES[m]), "C_both") for m in order]
+ref_sem = [semfrac(load(REF_FILES[m]), "C_both") for m in order]
+import numpy as np
+x = np.arange(len(order)); w = 0.36
+fig, ax = plt.subplots(figsize=(6.4, 3.4))
+b1 = ax.bar(x - w/2, loc_sem, w, label="localization task", color="#4C72B0")
+b2 = ax.bar(x + w/2, ref_sem, w, label="reference-completeness task", color="#C44E52")
+ax.set_xticks(x); ax.set_xticklabels(order)
+ax.set_ylabel("semantic-tool use in free-choice arm C (%)")
+ax.set_ylim(0, 70)
+ax.set_title("Tool choice is task-dependent: agents reach for the LSP\n~10x more when the task is reference-shaped")
+ax.legend(fontsize=9, loc="upper left")
+for bars in (b1, b2):
+    for b in bars:
+        ax.text(b.get_x()+b.get_width()/2, b.get_height()+1, f"{b.get_height():.0f}%", ha="center", fontsize=8.5)
+fig.tight_layout(); fig.savefig(os.path.join(FIGS, "fig5_routing.pdf")); plt.close(fig)
+
 print("Wrote figures:")
 for f in sorted(os.listdir(FIGS)):
     print("  figs/"+f)

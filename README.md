@@ -12,7 +12,7 @@ actually save tokens?**
 | **Localization** (issue names the symbol) | LSP **costs** tokens, not saves: +6% (Opus 4.8), +118% (Sonnet 4.6) at equal success. |
 | **Reference-completeness** (find all callers) | LSP buys **precision** (1.00 vs 0.76, zero false sites) but **not** token savings (+19% premium), and can't lift the ~0.66 recall ceiling. |
 | **Model capability** | LSP **saves** tokens only for the weakest model (Haiku 4.5, −26%) — a crutch against grep noise. |
-| **Revealed preference** | Given both tools free, **every** model defaults to `grep` (semantic-tool use 0% / 4% / 6%), forgoing the LSP even where it helps. |
+| **Revealed preference** | Tool choice is **task-dependent**: on localization every model defaults to `grep` (semantic-tool use 0% / 4% / 6%), but on reference-finding the same models reach for the LSP ~half the time, unprompted (45% / 50% / 57%). The grep preference is a learned, task-shaped policy — not a fixed bias. |
 
 The engineering takeaway is not "add an LSP" but **(a)** an adaptive router keyed on task class, model
 capability, and lexical noise, and **(b)** training the *when-to-go-semantic* competence into the

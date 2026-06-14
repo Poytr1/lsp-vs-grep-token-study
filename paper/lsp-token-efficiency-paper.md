@@ -30,11 +30,13 @@ in the common case, **negative**: on symbol-named *localization* the LSP *costs*
 +118% on Sonnet) and the agent ignores it entirely when free; on *reference-completeness* the LSP buys
 **precision** (1.00 vs 0.76, zero false call sites) but not token savings (a ~19% premium) and cannot
 raise the recall ceiling set by agent thoroughness; and it nets a token **saving only for the weakest
-model** (Haiku, −26%), as a crutch against lexical noise. The most robust finding cuts across every
-condition: **agents default to `grep` when the LSP is merely available, forgoing it even where it
-helps.** This argues not for "LSP-always" but for an *adaptive router* keyed on task class, model
-capability, and lexical noise — and, ultimately, for training the when-to-go-semantic competence into
-the policy, since handing the model the tool is demonstrably insufficient.
+model** (Haiku, −26%), as a crutch against lexical noise. The most robust finding is that the agent's
+tool choice is **task-dependent**: it defaults to `grep` on localization (semantic-tool use 0–6%) but
+reaches for the LSP about half the time on reference tasks (45–57%), unprompted — the grep preference
+is not a fixed bias but a learned, task-shaped policy. This argues not for "LSP-always" but for an
+*adaptive router* keyed on task class, model capability, and lexical noise — and, since that routing
+competence is demonstrably already present in latent form, for reinforcing it into the policy rather
+than bolting on the tool.
 
 ---
 
@@ -426,12 +428,45 @@ decomposition is the real result:
 - The precision gain costs **~19% more tokens**, and per-target it appears on **every cross-file
   function** (+0.06 to +0.13 F1) but **vanishes on the one single-file target** (both arms F1 = 1.00).
 - Free-choice arm C reverts to grep's profile (precision 0.76) — the agent **forgoes the precision
-  gain** even where it exists. The universal grep preference holds across task classes.
+  gain** even where it exists (but see §6.5.3.1: on reference tasks it uses the LSP far more than on
+  localization).
 
 So the reference half of **Prediction 1 is confirmed but reframed**: semantic retrieval's benefit on
 reference-heavy tasks is real but is **precision/correctness, not token reduction** — and it is gated
-by agent thoroughness on the recall side. **Prediction 3 again confirmed** (arm C forgoes the
-benefit). Prediction 4 (repo-scale / static-index, arm E) remains untested in this pilot.
+by agent thoroughness on the recall side. Prediction 4 (repo-scale / static-index, arm E) remains
+untested in this pilot.
+
+### 6.5.3.1 Across models, and task-dependent tool choice
+
+We ran the reference experiment on all three models (60 episodes each):
+
+| Model | A grep F1 | B lsp F1 | ΔF1 | B vs A tokens |
+|-------|----------:|---------:|----:|--------------:|
+| Opus 4.8 | 0.706 | 0.778 | +0.072 | +19% |
+| Sonnet 4.6 | 0.706 | 0.789 | +0.083 | +12% |
+| Haiku 4.5 | 0.706 | 0.719 | +0.013 | **−7%** |
+
+First, the accuracy benefit is **model-independent**: the LSP lifts F1 for all three, with precision
+→ 1.00 for the two capable models and 0.93 for Haiku. Second, the *token* premium is milder than
+localization — it shrinks sharply relative to the localization tax (Sonnet +118% on localization →
++12% here; Haiku −26% → −7%) but stays slightly positive for the strong models. Unlike localization,
+here the premium **buys real F1**; a clean token saving appears only for the weakest model (Haiku, −7%).
+
+The most important refinement: **tool choice is task-dependent.** The localization data suggested a
+*universal* grep preference (free-choice semantic-tool use 0% / 4% / 6%). The reference data overturns
+the universality — the **same** agents, given the **same** free choice, use semantic tools **45% / 50%
+/ 57%** of the time when the task is reference-shaped:
+
+| Model | localization (arm C semantic use) | reference (arm C semantic use) |
+|-------|----------------------------------:|-------------------------------:|
+| Opus 4.8 | 0% | 45% |
+| Sonnet 4.6 | 4% | 50% |
+| Haiku 4.5 | 6% | 57% |
+
+So the grep default is **task-dependent, not a fixed bias** — the policy already has substantial latent
+routing competence and exercises it (~10× more) when the task obviously suits semantic navigation. This
+*strengthens* the case for an adaptive router **and** for training the routing into the policy: the
+signal is demonstrably already there to be reinforced.
 
 ### 6.5.4 Synthesis
 
@@ -439,14 +474,17 @@ Across two task classes and three models, a single conditional structure holds:
 
 > **"Does an LSP save tokens?" — in general, no.** On symbol-named *localization* it *costs* tokens
 > (a tax that grows as the model gets stronger). On *reference-completeness* it does not save tokens
-> either; it buys *precision* at a ~19% token premium, and cannot fix the recall bottleneck. It saves
-> tokens only for the *weakest* model, as a crutch against lexical noise. And across every condition,
-> **agents default to grep when free — forgoing the LSP even where it would help.**
+> either (a smaller +12–19% premium for capable models) but the premium now buys *precision* (1.00 vs
+> 0.76) and cannot fix the recall bottleneck. It saves tokens only for the *weakest* model, as a crutch
+> against lexical noise. And the agent's tool choice is **task-dependent**: it defaults to grep on
+> localization (0–6% semantic use) but reaches for the LSP about half the time on reference tasks
+> (45–57%) — the grep preference is not a fixed bias but a learned, task-shaped policy.
 
 This is exactly the shape that argues against "LSP-always" and for **(a)** an adaptive router keyed on
 task class, model capability, and lexical-noise level, and **(b)** training the *when-to-go-semantic*
-competence into the policy — because, empirically, handing the model the tool is insufficient; it
-will not use it on its own.
+competence into the policy — and since that routing competence is demonstrably already present in
+latent form (it fires far more on reference tasks than localization), the path is to *reinforce* it
+rather than bolt on the tool.
 
 ---
 
@@ -494,13 +532,16 @@ negative**: on symbol-named localization, semantic retrieval *costs* tokens (a t
 model strength); on reference-completeness it buys *precision*, not token savings, at a ~19% premium,
 and cannot lift the recall ceiling set by agent thoroughness; it nets a token *saving* only for the
 weakest model, as a crutch against lexical noise. Underneath all of it sits the most robust finding:
-**every model defaults to `grep` when the LSP is merely available — forgoing it even where it helps.**
-That single fact is why the durable solution is not "add an LSP" but to make the routing, and
-eventually the semantic competence itself, **native to the policy rather than a brittle external
-layer** — the direction the most forward-looking related work (RL-from-language-server-feedback) is
-already pointing. The contribution of this study is to replace an assertion with a measurement, and a
-blanket recommendation with a conditional one. The honest next step is scale: more repositories, the
-edit and static-index arms, and the TypeScript stratum where reference resolution is most reliable.
+**the agent's tool choice is task-dependent — it defaults to `grep` on localization (0–6% semantic
+use) but reaches for the LSP about half the time on reference tasks (45–57%), unprompted.** The grep
+preference is not a fixed bias but a learned, task-shaped policy. That is why the durable solution is
+not "add an LSP" but to make the routing, and eventually the semantic competence itself, **native to
+the policy rather than a brittle external layer** — and since that routing competence is demonstrably
+already present in latent form, the path is to reinforce it (the direction the most forward-looking
+related work, RL-from-language-server-feedback, already points). The contribution of this study is to
+replace an assertion with a measurement, and a blanket recommendation with a conditional one. The
+honest next step is scale: more repositories, the edit and static-index arms, and the TypeScript
+stratum where reference resolution is most reliable.
 
 ---
 
