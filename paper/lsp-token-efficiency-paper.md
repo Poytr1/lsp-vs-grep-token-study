@@ -624,6 +624,20 @@ at 1 after 40 s); opening all source files does (1 → 14 immediately). We added
 deployment lesson: an LSP-backed agent that does not warm the index will silently get incomplete
 references on exactly the queries a refactor depends on.**
 
+This warmup is not free: opening every source file and letting the server settle costs **~15 s per
+episode even on `requests` (19 source files)**, and it grows with repository size. The requirement is
+also *not* specific to `pyright` — we measured the identical pathology on TypeScript: a cold
+`textDocument/references` at the definition of `remeda`'s `purry` (used across 108 files) returns **1**
+reference, rising to the full set only after the project finishes indexing (~10 s). It is a general
+property of LSP cross-file resolution, which is lazy and asynchronous. Production LSP-MCP servers treat
+it as such: Serena ships a build-time `serena project index` command that walks the repository and
+persists symbols to an on-disk cache (`document_symbols.pkl`), *and* a runtime guard
+`_wait_for_cross_file_references_if_needed()` whose own comment states that *"some [language servers]
+require waiting for a while before they can return accurate cross-file results [...] after at least one
+file was opened."* In other words, **a warmed (ideally pre-cached) index is table stakes for any
+LSP-backed agent, not an optional tuning** — the cost we pay per episode is precisely what such a cache
+amortizes away.
+
 ### 6.6.4 Location vs. text, cleanly — *inline snippets help a lot, but cannot close the gap*
 
 With a complete, warmed `pyright` backend we can finally isolate the variable that matters in practice:

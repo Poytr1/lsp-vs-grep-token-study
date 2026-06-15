@@ -489,7 +489,16 @@ that under-reports references fails a rename regardless of formatting, so we use
 \code{find\_references} issued \emph{at a definition} --- the natural query for a rename --- returns only
 the definition ($1$ result) until the referencing files are opened; a fixed wait does not help ($1$ after
 $40$\,s), but opening all source files does ($1\!\to\!14$). \textbf{An LSP-backed agent that does not warm
-the index silently gets incomplete references on exactly the queries a refactor depends on.}
+the index silently gets incomplete references on exactly the queries a refactor depends on.} This warmup
+is not free --- opening every file and letting the server settle costs ${\sim}15$\,s per episode even on
+\code{requests} ($19$ files), growing with repo size --- and it is \emph{not} \code{pyright}-specific: a
+cold \code{textDocument/references} at the definition of \code{remeda}'s \code{purry} (used across $108$
+TypeScript files) likewise returns $1$ until indexing completes (${\sim}10$\,s). Production LSP-MCP servers
+treat this as table stakes: Serena ships a build-time \code{serena project index} that persists symbols to
+an on-disk cache, \emph{and} a runtime guard \code{\_wait\_for\_cross\_file\_references\_if\_needed()} whose
+comment notes that some servers ``require waiting [\ldots] before they can return accurate cross-file
+results [\ldots] after at least one file was opened.'' A warmed, ideally pre-cached, index is thus a
+prerequisite for any LSP-backed agent, not optional tuning.
 
 With a complete, warmed backend we isolate the practical question: does returning each reference's line
 \emph{inline} (as production LSP-MCP servers such as Serena do) beat the bare-location default? Arm F
