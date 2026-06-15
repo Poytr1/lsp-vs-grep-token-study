@@ -16,9 +16,9 @@
 \setlength{\parindent}{0pt}
 
 \title{Does a Language Server Save Tokens for Coding Agents?\\
-\large A Measurement Methodology and Pilot Study}
-\author{Ilya Sutskever (agent persona) \\ \small Prepared for @pchsu}
-\date{2026-06-13}
+\large A Measurement Methodology and Preliminary Study}
+\author{Pengcheng Xu \\ \small \texttt{pooytr1@gmail.com}}
+\date{June 2026}
 
 \begin{document}
 \maketitle
@@ -36,14 +36,20 @@ literature that make this claim and found a striking gap: \textbf{it is asserted
 measured almost nowhere.} This paper (1) formalizes the question with a single primary metric,
 \emph{tokens-to-success}; (2) specifies a five-arm ablation isolating semantic retrieval from
 confounds; (3) maps three pre-stated failure modes onto measurable variables; and (4) reports a
-\textbf{pilot implementation} (Python / \code{requests}; Claude Opus~4.8, Sonnet~4.6, Haiku~4.5) that
-turns the prior into first numbers. The pilot finds the answer is conditional and, in the common case,
+\textbf{preliminary measurement study} across four task classes (Python \code{requests} plus two
+TypeScript repositories; Claude Opus~4.8, Sonnet~4.6, Haiku~4.5) that turns the prior into first
+numbers. The answer is conditional and, in the common case,
 \textbf{negative}: on symbol-named \emph{localization} the LSP \emph{costs} tokens ($+6\%$ Opus,
 $+118\%$ Sonnet) and the agent ignores it entirely when free; on \emph{reference-completeness} the LSP
 buys \textbf{precision} ($1.00$ vs $0.76$, zero false call sites) but not token savings (a ${\sim}19\%$
 premium) and cannot raise the recall ceiling set by agent thoroughness; and it nets a token
-\textbf{saving only for the weakest model} (Haiku, $-26\%$), as a crutch against lexical noise. The
-most robust finding is that the agent's tool choice is \textbf{task-dependent}: it defaults to
+\textbf{saving only for the weakest model} (Haiku, $-26\%$), as a crutch against lexical noise. On
+\emph{editing} scored by real test execution the verdict is sharpest: \code{grep} solves multi-file
+renames perfectly while a location-only LSP fails three-quarters of them by missing a call site, and even
+a complete, index-warmed, text-enriched LSP (returning each reference's line inline, as production
+LSP-MCP servers do) recovers most of that gap --- cutting follow-up file-reads ${\sim}5\times$ --- but
+cannot close it, because a rename must touch comments and strings that semantic references structurally
+exclude. The most robust finding is that the agent's tool choice is \textbf{task-dependent}: it defaults to
 \code{grep} on localization (semantic-tool use $0$--$6\%$) but reaches for the LSP about half the time on
 reference tasks ($45$--$57\%$), \emph{unprompted}. The grep preference is not a fixed bias but a learned,
 task-shaped policy. This argues not for ``LSP-always'' but for an \emph{adaptive router} keyed on task
@@ -151,7 +157,7 @@ E static repo-map & Aider-style signature map + grep & needs a \emph{live} serve
 
 The A--B--C triangle answers ``does semantic help when available, and does the agent use it when free?''
 D vs.\ C isolates \emph{habit} from \emph{capability}; E vs.\ B isolates how much benefit needs a live
-server. (Arm E is untested in this pilot.)
+server. (Arm E is untested here.)
 
 \paragraph{Tasks and controls.} We use tasks where reference-finding is on the critical path:
 change-signature/fix-callers, who-calls-X, cross-file refactor, dead-code, and issue-to-edit
@@ -185,13 +191,14 @@ across dynamic dispatch and strings. The decisive experiment is C vs.\ D: if for
 improves T2S over free choice, the agent was \emph{under-using} a capability it had (a habit problem);
 if not, semantic retrieval genuinely was not better for those tasks (a coverage problem).
 
-\section{Results (pilot implementation)}\label{sec:results}
+\section{Results}\label{sec:results}
 
-We implemented the harness and ran a pilot on \textbf{Python / \code{requests}} with two retrieval
-servers (\code{python-lsp-server}, and \code{pyright} for the reference experiment), driving Claude
-models through a tool-use agent loop that logs token usage per turn. The pilot is small (one repository)
-and validates the methodology and surfaces first signals rather than settling the question at scale
-(\S\ref{sec:limits}). All raw results are in the artifact bundle (\code{lsp-harness/runs/}).
+We implemented the harness and ran the study on \textbf{Python / \code{requests}} (and two TypeScript
+repositories for the cross-language and edit experiments) with two retrieval
+servers (\code{python-lsp-server}, and \code{pyright} for the reference and edit experiments), driving Claude
+models through a tool-use agent loop that logs token usage per turn. The study is preliminary --- small
+task suites, few repositories --- and validates the methodology and surfaces first signals rather than settling the question at scale
+(\S\ref{sec:limits}). All raw results are public (see Code and Data Availability).
 
 \subsection{Localization --- grep wins on tokens}
 
@@ -516,10 +523,15 @@ that recover most --- but not all --- of grep's edge.
 
 \section{Limitations and threats to validity}\label{sec:limits}
 
-The \S\ref{sec:results} results are a \textbf{pilot}: \textbf{(i)~single repository, small N} ---
-\code{requests}, a small library the models likely saw in pretraining; 6 localization tasks and 5
-reference targets, 3 rollouts each. Directions are robust; effect sizes (e.g.\ Sonnet's $+118\%$) are
-pilot-scale and will move with more data. \textbf{(ii)~Oracle quality} drove a mid-study change from
+The results are \textbf{preliminary}: \textbf{(i)~few repositories, small N} ---
+\code{requests} plus \code{remeda}/\code{hono} (TypeScript), small libraries the models likely saw in
+pretraining; 6 localization tasks, 5--6 reference targets, and 6 edit / 6 rename tasks, 2--3 rollouts each.
+Directions are robust; effect sizes (e.g.\ Sonnet's $+118\%$) are preliminary and will move with more data.
+\textbf{(ii)~The edit results are local, not SWE-bench-scored}: SWE-bench Docker images do not run under
+emulation on the available arm64 host, so edit tasks use a locally built set (real \code{requests} bugfix
+commits and constructed multi-file renames) run natively. This is sound for the \emph{relative} arm
+comparison but the \code{pass@1} values are not comparable to a standard SWE-bench leaderboard.
+\textbf{(iii)~Oracle quality} drove a mid-study change from
 \code{pylsp} to \code{pyright} (jedi was too incomplete to be ground truth) --- itself a finding, and a
 caution that any single LSP-as-truth inherits that server's blind spots. \textbf{(iii)~Task coverage}
 --- we did not run the \emph{edit} tasks end-to-end with test execution, arm E (static repo-map), or
@@ -534,8 +546,8 @@ total context tokens; caching can change billed cost). \textbf{(vii)~Provenance}
 ``Does an LSP save tokens'' is not a tooling opinion --- it is a measurable statement about retrieval
 precision under a token budget, and it has gone unmeasured in public while being near-universally
 asserted. We reduced it to a single metric (\emph{tokens-to-success at iso-accuracy}), a five-arm
-ablation, and a mapping of three failure modes onto movable variables --- and ran a pilot that turns the
-prior into first numbers. The pilot answer is \textbf{conditional, and in the common case negative}: on
+ablation, and a mapping of three failure modes onto movable variables --- and ran a preliminary study that turns the
+prior into first numbers. The answer is \textbf{conditional, and in the common case negative}: on
 symbol-named localization the LSP \emph{costs} tokens (a tax growing with model strength); on
 reference-completeness it buys \emph{precision}, not token savings, at a $\sim$19\% premium and cannot
 lift the recall ceiling; it nets a saving only for the weakest model. Underneath sits the most robust
@@ -543,8 +555,28 @@ finding: \textbf{every model defaults to \code{grep} when the LSP is merely avai
 durable solution is not ``add an LSP'' but to make the routing --- and eventually the semantic competence
 itself --- \textbf{native to the policy rather than a brittle external layer}, the direction
 RL-from-language-server-feedback already points. The contribution is to replace an assertion with a
-measurement, and a blanket recommendation with a conditional one. The honest next step is scale: more
-repositories, the edit and static-index arms, and the TypeScript stratum.
+measurement, and a blanket recommendation with a conditional one. The honest next step is scale: more and
+larger repositories, real SWE-bench-scored edits on Docker-capable hardware, and a second model family.
+
+\section*{Code and data availability}
+All code (harness, task builders, verifiers, analysis) and raw per-episode results are public at
+\url{https://github.com/Poytr1/lsp-vs-grep-token-study}. Key result files: \code{harness/runs/v1\_all\_arms.jsonl}
+(localization), \code{ref\_opus.jsonl}/\code{ref\_ts\_*.jsonl} (reference-completeness),
+\code{edit\_opus\_verified.jsonl} (single-file edits), and \code{rename\_opus\_verified.jsonl} /
+\code{rename\_warm\_BF\_verified.jsonl} (multi-file renames; location-only vs.\ text-inline). Each arm is a
+tool surface behind one identical agent loop; figures regenerate via \code{harness/make\_figs.py}.
+
+\section*{How to cite}
+\begin{verbatim}
+@misc{xu2026lsptokens,
+  title  = {Does a Language Server Save Tokens for Coding Agents?
+            A Measurement Methodology and Preliminary Study},
+  author = {Xu, Pengcheng},
+  year   = {2026},
+  note   = {Preprint},
+  howpublished = {\url{https://github.com/Poytr1/lsp-vs-grep-token-study}}
+}
+\end{verbatim}
 
 \appendix
 \section{Source provenance}

@@ -123,7 +123,21 @@ pilot-scale. See the paper's Limitations section.
 
 ## The paper
 
+**Pengcheng Xu** · *A Measurement Methodology and Preliminary Study* (June 2026).
+
 `paper/lsp-token-efficiency-paper.pdf` (or `.md` / `.tex`) has the full methodology, the three-failure-
 mode mapping (install / interface / churn), the mechanism analysis (including *why* the LSP costs more
 on reference tasks — `find_references` returns locations only, forcing follow-up reads, while `grep`
-returns the line inline), all results with figures, and honest limitations.
+returns the line inline), all four task classes (localization, reference, single- and multi-file edits)
+with figures, and honest limitations.
+
+```bibtex
+@misc{xu2026lsptokens,
+  title  = {Does a Language Server Save Tokens for Coding Agents?
+            A Measurement Methodology and Preliminary Study},
+  author = {Xu, Pengcheng},
+  year   = {2026},
+  note   = {Preprint},
+  howpublished = {\url{https://github.com/Poytr1/lsp-vs-grep-token-study}}
+}
+```

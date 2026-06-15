@@ -1,9 +1,8 @@
-# Does a Language Server Save Tokens for Coding Agents? A Measurement Methodology
+# Does a Language Server Save Tokens for Coding Agents? A Measurement Methodology and Preliminary Study
 
-**A design and methodology paper**
+**Pengcheng Xu** · `pooytr1@gmail.com`
 
-*Author persona: Ilya Sutskever (agent). Prepared for @pchsu.*
-*Date: 2026-06-13. Primary language under study: TypeScript (`tsserver` / `typescript-language-server`).*
+*A measurement methodology and preliminary study. June 2026. Code and data: <https://github.com/Poytr1/lsp-vs-grep-token-study>.*
 
 ---
 
@@ -24,8 +23,8 @@ information-retrieval problem with a single primary metric, **tokens-to-success*
 a five-arm ablation that isolates the contribution of semantic retrieval from confounds. (3) It maps
 three concrete, pre-stated failure modes — installation cost, interface gaps, and index churn —
 onto directly measurable variables, so that a negative result is as informative as a positive one.
-(4) It reports a **pilot implementation** (Python / `requests`, Claude Opus 4.8 / Sonnet 4.6 /
-Haiku 4.5) that turns the prior into first numbers. The pilot finds the answer is conditional and,
+(4) It reports a **preliminary measurement study** (Python / `requests` plus two TypeScript repositories;
+Claude Opus 4.8 / Sonnet 4.6 / Haiku 4.5) that turns the prior into first numbers. The answer is conditional and,
 in the common case, **negative**: on symbol-named *localization* the LSP *costs* tokens (+6% on Opus,
 +118% on Sonnet) and the agent ignores it entirely when free; on *reference-completeness* the LSP buys
 **precision** (1.00 vs 0.76, zero false call sites) but not token savings (a ~19% premium) and cannot
@@ -361,13 +360,14 @@ rather than scaffolded.
 
 ---
 
-## 6.5. Results (pilot implementation)
+## 6.5. Results
 
-We implemented the harness and ran a pilot on **Python / `requests`** with two retrieval servers
-(`python-lsp-server` and, for the reference experiment, `pyright`), driving Claude models through a
-tool-use agent loop that logs token usage per turn. The pilot is small (one repository) and is meant
+We implemented the harness and ran the study on **Python / `requests`** (and, for the cross-language and
+edit experiments, two TypeScript repositories) with two retrieval servers (`python-lsp-server` and, for the
+reference and edit experiments, `pyright`), driving Claude models through a tool-use agent loop that logs
+token usage per turn. The study is **preliminary** — small task suites, few repositories — and is meant
 to validate the methodology and surface first signals, not to settle the question at scale; §7 states
-the caveats. All raw results are in the artifact bundle (`lsp-harness/runs/`).
+the caveats. All raw results are in the public repository (`harness/runs/`).
 
 ### 6.5.1 Localization tasks — *grep wins on tokens*
 
@@ -439,7 +439,7 @@ decomposition is the real result:
 So the reference half of **Prediction 1 is confirmed but reframed**: semantic retrieval's benefit on
 reference-heavy tasks is real but is **precision/correctness, not token reduction** — and it is gated
 by agent thoroughness on the recall side. Prediction 4 (repo-scale / static-index, arm E) remains
-untested in this pilot.
+untested here.
 
 ### 6.5.3.1 Across models, and task-dependent tool choice
 
@@ -688,16 +688,16 @@ LSP path, a warmed index and inline-context results as table stakes.
 
 ## 7. Limitations and threats to validity
 
-The §6.5 results are a **pilot** and must be read with these bounds:
+The results are **preliminary** and must be read with these bounds:
 
-- **Few repositories, small N.** Localization runs are on `requests`; reference runs span `requests`
-  (Python), `remeda` and `hono` (TypeScript) — three small, well-known libraries the models have likely
-  seen in pretraining. 6 localization tasks and 5–6 reference targets per repo, 3 rollouts each. This is
-  enough to validate the harness, separate the noise axis from language, and surface clear directional
-  signals, **not** to claim effect sizes that generalize. The numbers (e.g. Sonnet's +118%) are
-  pilot-scale and will move with more repositories and tasks; the *directions* (LSP taxes localization,
-  buys precision not tokens on reference tasks, helps weak models, is ignored when optional, and tracks
-  lexical noise rather than language) are the robust claims.
+- **Few repositories, small N.** Localization runs are on `requests`; reference and edit runs span
+  `requests` (Python), `remeda` and `hono` (TypeScript) — small, well-known libraries the models have likely
+  seen in pretraining. 6 localization tasks, 5–6 reference targets per repo, and 6 edit/6 rename tasks, with
+  2–3 rollouts each. This is enough to validate the harness, separate the noise axis from language, and
+  surface clear directional signals, **not** to claim effect sizes that generalize. The numbers (e.g.
+  Sonnet's +118%) are preliminary and will move with more repositories and tasks; the *directions* (LSP taxes
+  localization, buys precision not tokens on reference tasks, helps weak models, is ignored when optional,
+  tracks lexical noise rather than language, and is dominated by grep on edits) are the robust claims.
 - **Oracle quality drove a mid-study change.** We initially used `pylsp` (jedi) as the
   reference-completeness ground truth and found it too incomplete on dynamic Python (it disagreed
   badly with an AST cross-check). We switched the oracle to `pyright`, which is markedly more
@@ -731,8 +731,8 @@ The fundamental insight is that "does an LSP save tokens" is not a tooling opini
 measurable statement about retrieval precision under a token budget, and it has, remarkably, gone
 unmeasured in public while being near-universally asserted. We reduced it to a single primary metric
 (**tokens-to-success at iso-accuracy**), a five-arm ablation that isolates semantic retrieval from its
-confounds, and a mapping of three real failure modes onto movable variables — and we ran a pilot that
-turns the prior into first numbers. The pilot answer is **conditional, and in the common case
+confounds, and a mapping of three real failure modes onto movable variables — and we ran a preliminary
+study that turns the prior into first numbers. The answer is **conditional, and in the common case
 negative**: on symbol-named localization, semantic retrieval *costs* tokens (a tax that grows with
 model strength); on reference-completeness it buys *precision*, not token savings, at a ~19% premium,
 and cannot lift the recall ceiling set by agent thoroughness; it nets a token *saving* only for the
@@ -752,6 +752,30 @@ study is to replace an assertion with a measurement, and a blanket recommendatio
 The honest next step is scale: more and larger repositories, the static-index arm, and cross-language
 *localization* — the reference and edit tasks now span the retrieval-and-mutation spectrum and show the
 routing key is lexical noise and task class, not language.
+
+---
+
+## Code and data availability
+
+All code (harness, task builders, verifiers, analysis scripts) and raw per-episode results are public at
+<https://github.com/Poytr1/lsp-vs-grep-token-study>. Key result files: `harness/runs/v1_all_arms.jsonl`
+(localization), `ref_opus.jsonl` / `ref_ts_*.jsonl` (reference-completeness), `edit_opus_verified.jsonl`
+(single-file edits), and `rename_opus_verified.jsonl` / `rename_warm_BF_verified.jsonl` (multi-file
+renames: location-only vs. text-inline). Every arm is a tool surface behind one identical agent loop;
+figures regenerate via `harness/make_figs.py`.
+
+## How to cite
+
+```bibtex
+@misc{xu2026lsptokens,
+  title  = {Does a Language Server Save Tokens for Coding Agents?
+            A Measurement Methodology and Preliminary Study},
+  author = {Xu, Pengcheng},
+  year   = {2026},
+  note   = {Preprint},
+  howpublished = {\url{https://github.com/Poytr1/lsp-vs-grep-token-study}}
+}
+```
 
 ---
 
