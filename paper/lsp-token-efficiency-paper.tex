@@ -449,6 +449,62 @@ This argues against ``LSP-always'' and for \textbf{(a)} an adaptive router keyed
 capability, and lexical-noise level, and \textbf{(b)} training the \emph{when-to-go-semantic} competence
 into the policy --- because handing the model the tool is empirically insufficient.
 
+\subsection{Edit tasks with real test execution}\label{sec:edit}
+
+Localization and reference-completeness are \emph{retrieval} tasks scored against a static oracle. What
+matters most for an agent is whether the LSP helps it \emph{edit code correctly}, where correctness is
+defined by \emph{execution}. Because the SWE-bench Docker images do not run under emulation on the
+available arm64 host, we built a local, SWE-bench-style harness on modern \code{requests} that runs
+natively (Python 3.11): the agent edits the working tree via an \code{edit\_file} tool, then the task's
+test patch is applied and the target tests run. Resolution is real \code{pass@1}.
+
+\textbf{Single-file edits (6 real bugfix commits).} Grep-only leads (\code{pass@1} $0.83$); adding (C,
+$0.58$) or forcing (D, $0.75$) the LSP does not help, and the LSP again carries a token premium.
+Failures are \emph{wrong-rewrite} and \emph{no-edit}, never missed-site --- but a single-file task
+\emph{cannot} exhibit a cross-file recall miss, so it cannot test whether the LSP's recall ceiling
+propagates into edit failures. That needs multi-file edits.
+
+\textbf{Multi-file renames (6 helpers used across 2--6 files).} The agent must update every call site; a
+single miss leaves the old name dangling (caught by \code{import requests} or a residual-name grep). We
+also measure \emph{site-recall} = fraction of referencing files fully converted. The prediction is
+confirmed:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Arm & \code{pass@1} & site-recall & missed-site \\
+\midrule
+A grep-only            & \textbf{1.00} & 1.000 & 0.00 \\
+B lsp (location-only)  & 0.67 & 0.930 & 0.33 \\
+F lsp (text inline)    & \textbf{0.83} & 0.958 & 0.17 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two confounds had to be removed first, and isolating them is what made the mechanism precise.
+\emph{(i) Backend completeness:} \code{pylsp} (jedi) returns only ${\sim}\tfrac13$ of cross-file
+references on dynamic Python (5 of 15 for \code{to\_native\_string} vs.\ \code{pyright}'s 14); an LSP
+that under-reports references fails a rename regardless of formatting, so we use \code{pyright}.
+\emph{(ii) Index warmup:} \code{pyright} resolves references lazily per file, so a cold
+\code{find\_references} issued \emph{at a definition} --- the natural query for a rename --- returns only
+the definition ($1$ result) until the referencing files are opened; a fixed wait does not help ($1$ after
+$40$\,s), but opening all source files does ($1\!\to\!14$). \textbf{An LSP-backed agent that does not warm
+the index silently gets incomplete references on exactly the queries a refactor depends on.}
+
+With a complete, warmed backend we isolate the practical question: does returning each reference's line
+\emph{inline} (as production LSP-MCP servers such as Serena do) beat the bare-location default? Arm F
+attaches $\pm 2$ source lines to each \code{pyright} reference. \textbf{It helps substantially and via the
+predicted mechanism}: vs.\ B, \code{pass@1} $0.67\!\to\!0.83$, site-recall $0.930\!\to\!0.958$, tokens
+$-19\%$, and file-reads/episode $15.2\!\to\!3.2$ (below grep's $4.3$) --- the location-only arm wastes its
+turns reading each file back to see the call site. \textbf{Yet even F still loses to grep, and the
+residual is fundamental}: B and F both fail the \code{default\_hooks} rename by missing the same site, a
+\emph{comment} (\code{\# \ldots default\_hooks() return type}). \code{pyright} returns the six real
+references but never the comment --- by design, a comment is not a semantic reference. A rename is a
+\emph{textual} operation; semantic references are a strict subset of textual occurrences, so
+\code{find\_references} cannot match grep's completeness on edits spanning non-code text. For editing,
+grep is the better default; if an LSP is used, a warmed index and inline-context results are table stakes
+that recover most --- but not all --- of grep's edge.
+
 \section{Limitations and threats to validity}\label{sec:limits}
 
 The \S\ref{sec:results} results are a \textbf{pilot}: \textbf{(i)~single repository, small N} ---

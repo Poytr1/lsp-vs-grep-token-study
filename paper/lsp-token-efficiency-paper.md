@@ -33,7 +33,12 @@ raise the recall ceiling set by agent thoroughness; and it nets a token **saving
 model** (Haiku, −26%), as a crutch against lexical noise. The most robust finding is that the agent's
 tool choice is **task-dependent**: it defaults to `grep` on localization (semantic-tool use 0–6%) but
 reaches for the LSP about half the time on reference tasks (45–57%), unprompted — the grep preference
-is not a fixed bias but a learned, task-shaped policy. This argues not for "LSP-always" but for an
+is not a fixed bias but a learned, task-shaped policy. On *editing* tasks scored by real test execution
+the picture is starker still: grep solves multi-file renames perfectly while a location-only LSP fails
+three-quarters of them by missing a call site, and even a complete, index-warmed, text-enriched LSP
+(returning each reference's line inline, as production LSP-MCP servers do) recovers most of that gap —
+cutting follow-up file-reads ~5× — but cannot close it, because a rename must touch comments and strings
+that semantic references structurally exclude. This argues not for "LSP-always" but for an
 *adaptive router* keyed on task class, model capability, and lexical noise — and, since that routing
 competence is demonstrably already present in latent form, for reinforcing it into the policy rather
 than bolting on the tool.
@@ -543,6 +548,130 @@ rather than bolt on the tool.
 
 ---
 
+## 6.6 Edit tasks with real test execution
+
+Localization and reference-completeness are *retrieval* tasks, scored against a static oracle. The
+question that matters most for an agent, though, is whether the LSP helps it **edit code correctly** —
+where "correct" is defined by *execution*: the change must make the target tests pass. This section
+adds that dimension. Because the SWE-bench Docker images do not run under emulation on the available
+arm64 host, we built a local, SWE-bench-style harness on **modern `requests`** that runs natively
+(Python 3.11, no Docker): each task checks out a base commit, lets the agent edit the working tree via
+an `edit_file` tool, then applies the task's test patch and runs the target tests. Resolution is real
+`pass@1`.
+
+### 6.6.1 Single-file edits — *the LSP does not help, and the recall question is untestable here*
+
+Six real `requests` bugfix commits (each a single source file + a regression test), 4 arms × 2
+rollouts, Opus 4.8:
+
+| Arm | pass@1 | tokens (resolved) | dominant failure |
+|-----|-------:|------------------:|------------------|
+| A grep-only | **0.83** | 5894 | — |
+| B lsp-only | 0.75 | 7360 | — |
+| C grep+lsp (free) | 0.58 | 3721 | — |
+| D forced-semantic | 0.75 | 4794 | — |
+
+Grep-only is the strongest; adding (C) or forcing (D) the LSP does **not** help, consistent with every
+prior task class, and the LSP again carries a token premium. Failures are `wrong_rewrite` (right file,
+wrong content) and `no_edit` (the agent explored and gave up) — **not** missed-site recall failures.
+But this is *structural*: a single-file task cannot exhibit a cross-file recall miss, so it cannot test
+the prediction (§6.5.3) that the LSP's recall ceiling propagates into edit failures. That requires
+multi-file edits.
+
+### 6.6.2 Multi-file rename — *the recall→edit-failure prediction, confirmed*
+
+We constructed six **rename refactors** of internal helpers that are imported and called across 2–6
+source files (`to_native_string`, `extract_cookies_to_jar`, `get_auth_from_url`, `default_hooks`,
+`requote_uri`, `get_environ_proxies`). The agent must update *every* call site; a single missed site
+leaves the old name dangling, which the verifier catches (`import requests` fails, or the old name
+survives a source grep). Ground truth = the set of source files referencing the symbol; we additionally
+measure **site-recall** = fraction of those files the agent fully converts. This is `find_references`'
+home turf — if the LSP ever helps an edit, it should help here.
+
+The first run surfaced the prediction cleanly (Opus, location-only LSP via `pylsp`):
+
+| Arm | pass@1 | site-recall | missed-site rate |
+|-----|-------:|------------:|-----------------:|
+| A grep-only | **1.00** | 1.000 | 0.00 |
+| B lsp-only | 0.25 | 0.764 | **0.75** |
+| C grep+lsp | 0.92 | 0.917 | 0.00 |
+| D forced-semantic | 0.92 | 0.917 | 0.00 |
+
+Grep finds every call site every time. The **location-only LSP arm fails three-quarters of episodes by
+missing a call site** — failed episodes average 0.56 site-recall versus 1.00 for resolved ones. The
+prediction is confirmed: on multi-file edits the LSP's incomplete reach translates directly into broken
+patches. C and D recover only because the agent falls back to grep (its free-choice semantic-tool use is
+3–13%).
+
+### 6.6.3 Two confounds, isolated — *backend completeness and index warmup*
+
+The location-only result above is real but was initially *overstated*, and chasing two anomalies is
+what made the mechanism precise.
+
+**(i) The semantic backend must actually be complete.** Our edit harness first used `pylsp` (jedi),
+which on dynamic Python returns only ~⅓ of real cross-file references (5 of 15 for `to_native_string`,
+versus `pyright`'s 14 and grep's 15). An LSP that *itself* under-reports references will of course fail
+a rename, regardless of output format — so this says nothing about the location-vs-text question. We
+switched the edit harness to `pyright` (already our reference oracle).
+
+**(ii) The language server must be warmed across the whole project.** `pyright` resolves references
+*lazily, per file*. A cold `find_references` issued **at a symbol's definition** — the natural query
+for a rename — returns only the definition itself (1 result) until the *referencing* files have been
+opened; a query at a *usage* site returns the full set. A fixed wait does not fix this (the count stayed
+at 1 after 40 s); opening all source files does (1 → 14 immediately). We added a warmup that opens every
+`src/` file before the episode. This both restored completeness *and* cut cost sharply (on
+`to_native_string`, arm B went from 26 turns / 9.4k tokens to 7 turns / 5.4k). **This is itself a
+deployment lesson: an LSP-backed agent that does not warm the index will silently get incomplete
+references on exactly the queries a refactor depends on.**
+
+### 6.6.4 Location vs. text, cleanly — *inline snippets help a lot, but cannot close the gap*
+
+With a complete, warmed `pyright` backend we can finally isolate the variable that matters in practice:
+does returning the **referencing line's text inline** (as production LSP-MCP servers such as Serena do —
+its `find_referencing_symbols` attaches a `content_around_reference` snippet rather than a bare
+location) beat the bare-location default? We compare arm **B** (location-only) against arm **F**
+(`find_references_with_context`: the same `pyright` references, each enriched with ±2 lines of source
+inline, grep-style), with grep (A) as the ceiling. Opus, six rename tasks × 2 rollouts:
+
+| Arm | pass@1 | site-recall | tokens (resolved) | turns | file-reads / episode |
+|-----|-------:|------------:|------------------:|------:|---------------------:|
+| A grep-only | **1.00** | 1.000 | **2451** | 6.6 | 4.3 |
+| B lsp (location-only) | 0.67 | 0.930 | 4131 | 13.2 | 15.2 |
+| F lsp (text inline) | **0.83** | 0.958 | 3336 | 7.6 | **3.2** |
+
+Two findings, and they point in opposite directions:
+
+- **The inline snippet helps, substantially, and exactly via the predicted mechanism.** F beats B on
+  every axis: pass@1 0.67 → 0.83, site-recall 0.930 → 0.958, tokens −19%, and **file-reads per episode
+  15.2 → 3.2** — below even grep's 4.3. The location-only arm spends its turns issuing `find_references`
+  and then *reading each file back* to see the call site; attaching the line inline removes those
+  follow-up reads almost entirely. This is the quantitative case for the Serena-style design, and it
+  validates the intuition that the LSP's penalty is largely a *presentation* problem, not a retrieval
+  one.
+- **But even a complete, warmed, text-enriched LSP still loses to grep**, and the residual is
+  *fundamental, not fixable*. Both B and F fail the `default_hooks` rename identically, missing the same
+  site — `_types.py:42`, which is a **comment**: `# These are needed at runtime for default_hooks()
+  return type`. `pyright` returns the six real references but never the comment, *by design*: a comment
+  is not a semantic reference. A rename, however, is a *textual* operation that must touch comments,
+  docstrings, and strings mentioning the name. Semantic references are a strict subset of textual
+  occurrences, so `find_references` — however well warmed and however richly formatted — cannot match
+  grep's completeness on edits that span non-code text. That is why F reaches 0.83 but not grep's 1.00.
+
+### 6.6.5 Synthesis for edits
+
+For *editing*, grep is the better default: it is cheaper, and it is textually complete in a way semantic
+references structurally are not. The LSP's location-only output actively harms multi-file edits (missed
+call sites → broken patches), and two operational prerequisites are easy to get wrong (a complete
+backend; a fully-warmed index). The single highest-value remedy is the cheapest — **return the
+reference line inline** — which recovers most of the gap by eliminating follow-up reads, but cannot
+close it. This sharpens, rather than overturns, the paper's thesis: the LSP's semantic precision earns
+its keep on *reference listing in noisy code* (§6.5.3, §6.5.5); on *edits* the textual completeness and
+low cost of grep dominate. The right architecture remains an **adaptive router** — grep by default,
+semantic only where the task is reference-shaped and the codebase is lexically noisy — plus, for any
+LSP path, a warmed index and inline-context results as table stakes.
+
+---
+
 ## 7. Limitations and threats to validity
 
 The §6.5 results are a **pilot** and must be read with these bounds:
@@ -560,10 +689,13 @@ The §6.5 results are a **pilot** and must be read with these bounds:
   badly with an AST cross-check). We switched the oracle to `pyright`, which is markedly more
   complete. This is itself a finding — **LSP reference quality varies sharply by server** — and a
   caution: a study that takes any single LSP as "truth" inherits that server's blind spots.
-- **Localization vs reference is not the whole task space.** We did not run the *edit* tasks
-  (change-a-signature-and-fix-all-callers) end-to-end with test execution, nor the static-repo-map
-  arm E, nor large repositories where the per-symbol LSP cost (arXiv:2604.18413) and the
-  static-index trade-off (Prediction 4) would bite. Those remain open.
+- **The edit results are local, not SWE-bench-scored.** We *do* run edit tasks end-to-end with real
+  test execution (§6.6), but on a **locally built** task set — real `requests` bugfix commits and
+  constructed multi-file renames, run natively because the SWE-bench Docker images do not execute under
+  emulation on the available arm64 host. This is sound for the *relative* arm comparison we care about
+  (grep vs location-LSP vs text-LSP), but the pass@1 numbers are not comparable to a standard SWE-bench
+  leaderboard. The static-repo-map arm E, and large repositories where the per-symbol LSP cost
+  (arXiv:2604.18413) and the static-index trade-off (Prediction 4) would bite, remain open.
 - **Language and server.** Python (`pylsp`/`pyright`) and TypeScript (`typescript-language-server`).
   The originally-motivating TypeScript case is now covered on the reference task (§6.5.5) and — notably —
   did *not* behave as a privileged "strong-LSP" stratum: a clean TypeScript repo was the *worst* case
@@ -590,18 +722,22 @@ turns the prior into first numbers. The pilot answer is **conditional, and in th
 negative**: on symbol-named localization, semantic retrieval *costs* tokens (a tax that grows with
 model strength); on reference-completeness it buys *precision*, not token savings, at a ~19% premium,
 and cannot lift the recall ceiling set by agent thoroughness; it nets a token *saving* only for the
-weakest model, as a crutch against lexical noise. Underneath all of it sits the most robust finding:
-**the agent's tool choice is task-dependent — it defaults to `grep` on localization (0–6% semantic
-use) but reaches for the LSP about half the time on reference tasks (45–57%), unprompted.** The grep
-preference is not a fixed bias but a learned, task-shaped policy. That is why the durable solution is
-not "add an LSP" but to make the routing, and eventually the semantic competence itself, **native to
-the policy rather than a brittle external layer** — and since that routing competence is demonstrably
-already present in latent form, the path is to reinforce it (the direction the most forward-looking
-related work, RL-from-language-server-feedback, already points). The contribution of this study is to
-replace an assertion with a measurement, and a blanket recommendation with a conditional one. The
-honest next step is scale: more repositories, the edit and static-index arms, and cross-language
-*localization* — the reference task now spans both languages and shows the routing key is lexical
-noise, not language.
+weakest model, as a crutch against lexical noise. On *editing* under real test execution the verdict is
+sharpest: grep solves multi-file renames perfectly, a location-only LSP fails most of them by missing a
+call site, and the best LSP variant — complete, index-warmed, and returning each reference's line inline
+— recovers most of the gap (cutting follow-up reads ~5×) yet still cannot match grep, because semantic
+references structurally exclude the comments and strings a rename must touch. Underneath all of it sits
+the most robust finding: **the agent's tool choice is task-dependent — it defaults to `grep` on
+localization (0–6% semantic use) but reaches for the LSP about half the time on reference tasks (45–57%),
+unprompted.** The grep preference is not a fixed bias but a learned, task-shaped policy. That is why the
+durable solution is not "add an LSP" but to make the routing, and eventually the semantic competence
+itself, **native to the policy rather than a brittle external layer** — and since that routing competence
+is demonstrably already present in latent form, the path is to reinforce it (the direction the most
+forward-looking related work, RL-from-language-server-feedback, already points). The contribution of this
+study is to replace an assertion with a measurement, and a blanket recommendation with a conditional one.
+The honest next step is scale: more and larger repositories, the static-index arm, and cross-language
+*localization* — the reference and edit tasks now span the retrieval-and-mutation spectrum and show the
+routing key is lexical noise and task class, not language.
 
 ---
 
