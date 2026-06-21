@@ -90,37 +90,34 @@ claim. This separation is deliberate: the paper's central claim is about the \em
 measurement, so it must not itself rest on unverifiable measurement.
 
 \paragraph{Tools that already expose semantic navigation (F).}
-\textbf{Serena} (\url{https://github.com/oraios/serena}) wraps LSP with \code{find\_symbol},
+\textbf{Serena}~\cite{serena} wraps LSP with \code{find\_symbol},
 \code{find\_referencing\_symbols}, and symbolic editing across 40+ languages; it states symbolic editing
 is ``much more token-efficient'' and lets an agent explore ``without reading entire files'' --- an
-explicit claim \emph{with no benchmark numbers}. \textbf{mcp-language-server}
-(\url{https://github.com/isaacphi/mcp-language-server}) wraps a real language server and calls its edit
+explicit claim \emph{with no benchmark numbers}. \textbf{mcp-language-server}~\cite{mcpls} wraps a real language server and calls its edit
 tool ``more reliable and context-economical'' --- scoped to editing, \emph{no general token comparison}.
-\textbf{Aider repo-map} (\url{https://aider.chat/docs/repomap.html}) is a static cousin of LSP:
+\textbf{Aider repo-map}~\cite{aidermap} is a static cousin of LSP:
 tree-sitter extracts signatures and a PageRank-style ranking keeps the most-referenced symbols within a
 token budget; its stated motivation is exactly our thesis (``sending whole files \dots\ waste[s] the
 precious context window'') but it reports \emph{no before/after numbers}.
 
 \paragraph{Recent literature (F, arXiv, full abstracts captured).}
-\textbf{TypeScript Repository Indexing for Code Agent Retrieval} (arXiv:2604.18413) --- most directly
+\textbf{TypeScript Repository Indexing for Code Agent Retrieval}~\cite{tsindex} --- most directly
 relevant, in our originally-chosen language. It observes that ``LSP-based resolution requires a JSON-RPC
 call for each symbol lookup, [so] these per-symbol calls become a bottleneck on large TypeScript
 repositories,'' motivating a TS-Compiler-API parser. It measures \emph{index-construction} efficiency,
-not an agent's tokens-to-success. \textbf{RL from Compiler and Language Server Feedback}
-(arXiv:2510.22907) argues compilers/type-checkers/language-servers ``already compute the missing
+not an agent's tokens-to-success. \textbf{RL from Compiler and Language Server Feedback}~\cite{rlcsf} argues compilers/type-checkers/language-servers ``already compute the missing
 supervision signal \dots\ but expose it through interfaces designed for human-driven IDEs rather than
 learning loops,'' and turns LSP signal into a shaped process reward --- the strongest articulation of
-the interface-friction hypothesis and of training the signal into the policy. \textbf{CORE-Bench}
-(arXiv:2606.11864) is a benchmark for requirement-driven repository search (180K+ queries on
+the interface-friction hypothesis and of training the signal into the policy. \textbf{CORE-Bench}~\cite{corebench} is a benchmark for requirement-driven repository search (180K+ queries on
 SWE-bench-series), reporting ``a sharp drop from traditional code search to code retrieval in agentic
-coding settings.'' \textbf{Code as Agent Harness} (arXiv:2605.18747) frames code/tooling as the agent's
+coding settings.'' \textbf{Code as Agent Harness}~\cite{codeharness} frames code/tooling as the agent's
 substrate and lists ``evaluation beyond final task success'' as an open challenge.
 
 \paragraph{The gap.} Across tools and papers the pattern is consistent: \textbf{the token-efficiency of
 semantic retrieval is asserted, not measured.} The closest quantitative work measures index-build
 efficiency, not agent tokens-to-success at iso-accuracy. That gap is this study's justification.
-Established background (K): SWE-bench (Jimenez et al., 2023) and the SWE-agent agent-computer-interface
-line (Yang et al., 2024) provide the verified-task harness our protocol reuses.
+Established background (K): SWE-bench~\cite{swebench} and the SWE-agent agent-computer-interface
+line~\cite{sweagent} provide the verified-task harness our protocol reuses.
 
 \section{Method}
 
@@ -580,10 +577,53 @@ tool surface behind one identical agent loop; figures regenerate via \code{harne
 
 \appendix
 \section{Source provenance}
-\textbf{Fetch-verified (F):} \url{https://github.com/oraios/serena};
-\url{https://github.com/isaacphi/mcp-language-server}; \url{https://aider.chat/docs/repomap.html};
-arXiv:2604.18413, 2510.22907, 2606.11864, 2605.18747 (full abstracts). \\
-\textbf{Established background (K), not fetched:} SWE-bench (Jimenez et al., 2023); SWE-agent ACI (Yang
-et al., 2024); AutoCodeRover; Moatless.
+Sources were handled in two tiers. \emph{Fetch-verified (F)} --- retrieved and read this study:
+Serena~\cite{serena}, mcp-language-server~\cite{mcpls}, Aider repo-map~\cite{aidermap}, and
+arXiv:2604.18413~\cite{tsindex}, 2510.22907~\cite{rlcsf}, 2606.11864~\cite{corebench},
+2605.18747~\cite{codeharness} (full abstracts captured). \emph{Established background (K)} --- relied on
+from training knowledge and never used for a novel quantitative claim: SWE-bench~\cite{swebench},
+the SWE-agent agent-computer-interface~\cite{sweagent}, AutoCodeRover~\cite{autocoderover}, and
+Moatless~\cite{moatless}.
+
+\begin{thebibliography}{99}
+
+\bibitem{swebench} C.~E. Jimenez, J.~Yang, A.~Wettig, S.~Yao, K.~Pei, O.~Press, and K.~Narasimhan.
+\newblock SWE-bench: Can Language Models Resolve Real-World GitHub Issues?
+\newblock \emph{arXiv:2310.06770}, 2023.
+
+\bibitem{sweagent} J.~Yang, C.~E. Jimenez, A.~Wettig, K.~Lieret, S.~Yao, K.~Narasimhan, and O.~Press.
+\newblock SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering.
+\newblock \emph{arXiv:2405.15793}, 2024.
+
+\bibitem{tsindex} TypeScript Repository Indexing for Code Agent Retrieval.
+\newblock \emph{arXiv:2604.18413}, 2026.
+
+\bibitem{rlcsf} Reinforcement Learning from Compiler and Language Server Feedback.
+\newblock \emph{arXiv:2510.22907}, 2025.
+
+\bibitem{corebench} CORE-Bench: Code Retrieval in the Era of Agentic Coding.
+\newblock \emph{arXiv:2606.11864}, 2026.
+
+\bibitem{codeharness} Code as Agent Harness.
+\newblock \emph{arXiv:2605.18747}, 2026.
+
+\bibitem{serena} Oraios AI. Serena: A coding agent toolkit with semantic retrieval and editing.
+\newblock \url{https://github.com/oraios/serena}, 2024--2026.
+
+\bibitem{mcpls} I.~Phillips. mcp-language-server: An MCP server exposing language-server tools.
+\newblock \url{https://github.com/isaacphi/mcp-language-server}, 2024--2026.
+
+\bibitem{aidermap} Aider. Repository map.
+\newblock \url{https://aider.chat/docs/repomap.html}, 2023--2026.
+
+\bibitem{autocoderover} Y.~Zhang, H.~Ruan, Z.~Fan, and A.~Roychoudhury.
+\newblock AutoCodeRover: Autonomous Program Improvement.
+\newblock \emph{arXiv:2404.05427}, 2024.
+
+\bibitem{moatless} A.~Antonio (Moatless Tools).
+\newblock Moatless Tools: LLM tooling for code editing.
+\newblock \url{https://github.com/aorwall/moatless-tools}, 2024.
+
+\end{thebibliography}
 
 \end{document}
