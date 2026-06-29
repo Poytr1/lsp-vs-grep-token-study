@@ -217,7 +217,7 @@ D forced-semantic & 89\% & 945 & 51 grep / 4 semantic \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.62\textwidth]{figs/fig1_localization.pdf}
+\includegraphics[width=0.62\textwidth]{fig1_localization.pdf}
 \caption{\textbf{Localization (Opus 4.8): the LSP costs more, not less.} Tokens-to-success by arm. The
 LSP-only arm (B) is $6\%$ more expensive than grep-only (A) at identical $100\%$ success. The
 free-choice arm (C) collapses onto grep (it uses the LSP $0\%$ of the time), and forcing semantic-first
@@ -250,7 +250,7 @@ Haiku 4.5 & 11{,}911 & 8{,}799 & \textbf{$-26\%$} & 6\% \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{figs/fig2_models.pdf}
+\includegraphics[width=0.92\textwidth]{fig2_models.pdf}
 \caption{\textbf{Capability dependence and the universal grep habit.} \emph{Left:} the LSP token premium
 over grep, by model. Only the weakest model (Haiku) \emph{saves} tokens with the LSP ($-26\%$); both
 capable models pay a premium (Opus $+6\%$, Sonnet $+118\%$). \emph{Right:} how often each model uses a
@@ -285,7 +285,7 @@ D forced-semantic & 0.710 & 0.77 & 0.67 & 1499 \\
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.72\textwidth]{figs/fig3_reference.pdf}
+\includegraphics[width=0.72\textwidth]{fig3_reference.pdf}
 \caption{\textbf{Reference-completeness: the LSP buys precision, not recall.} Precision, recall, and F1
 by arm. The LSP arm (B) achieves \emph{perfect precision} (1.00 --- zero false call sites) versus grep's
 0.76, and wins on F1. But \textbf{recall is identical ($\sim$0.66) across all arms}: no tool helps the
@@ -306,7 +306,7 @@ gain even where it exists.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{figs/fig4_why.pdf}
+\includegraphics[width=0.92\textwidth]{fig4_why.pdf}
 \caption{\textbf{Why the LSP costs $+19\%$ tokens on reference tasks.} Per-tool-call token cost is nearly
 identical between arms ($163$ vs.\ $160$); the difference is \emph{call/turn count}. \emph{Left:} the LSP
 arm issues more tool calls per episode. \emph{Right:} it issues far more \code{read\_file} calls.
@@ -342,7 +342,7 @@ appears only for the weakest model (Haiku, $-7\%$).
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.72\textwidth]{figs/fig5_routing.pdf}
+\includegraphics[width=0.72\textwidth]{fig5_routing.pdf}
 \caption{\textbf{Tool choice is task-dependent --- the agent has latent routing competence.} Semantic-tool
 use in the free-choice arm C, by model, for the two task classes. On \emph{localization} every model
 defaults to \code{grep} (0--6\%); on \emph{reference-completeness} the same models reach for the LSP
@@ -417,7 +417,7 @@ regardless of language or repo, falls on the same line.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.7\textwidth]{figs/fig6_noise.pdf}
+\includegraphics[width=0.7\textwidth]{fig6_noise.pdf}
 \caption{\textbf{The LSP helps exactly when \code{grep} is noisy --- one relationship across repos and
 languages.} Each point is one target function: x-axis is \code{grep}'s precision on that target (1.0 =
 no lexical false positives), y-axis is the LSP's F1 benefit over \code{grep}. Points from all three
